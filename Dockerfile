@@ -17,6 +17,7 @@ RUN apt-get update --fix-missing && apt-get install -y \
     libsm6 \
     libxrender1 \
     unzip \
+    python3-minimal \
  && rm -rf /var/lib/apt/lists/*
 
 
