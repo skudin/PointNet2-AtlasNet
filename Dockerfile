@@ -21,6 +21,9 @@ RUN apt-get update --fix-missing && apt-get install -y \
     python3-pip \
  && rm -rf /var/lib/apt/lists/*
 
+# Pytorch and torchvision.
+RUN pip3 install https://download.pytorch.org/whl/cu100/torch-1.1.0-cp36-cp36m-linux_x86_64.whl && \
+    pip3 install https://download.pytorch.org/whl/cu100/torchvision-0.3.0-cp36-cp36m-linux_x86_64.whl
 
 # Create a working directory
 RUN mkdir /app
