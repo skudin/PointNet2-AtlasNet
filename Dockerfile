@@ -18,6 +18,7 @@ RUN apt-get update --fix-missing && apt-get install -y \
     libxrender1 \
     unzip \
     python3-minimal \
+    python3-pip \
  && rm -rf /var/lib/apt/lists/*
 
 
@@ -30,3 +31,5 @@ RUN adduser --disabled-password --gecos '' --shell /bin/bash user \
  && chown -R user:user /app
 RUN echo "user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/90-user
 USER user
+
+CMD [ "/bin/bash" ]
