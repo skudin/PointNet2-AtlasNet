@@ -17,7 +17,7 @@ class ParamsReader:
         args = self._parser.parse_args()
 
         self._common_params_filename = args.common_parameters
-        self._training_params_filename = args.training_parametes
+        self._training_params_filename = args.training_parameters
 
     def get_common_params(self):
         return self._parse_params_file(self._common_params_filename)
@@ -41,6 +41,7 @@ def main():
 
     common_params = params_reader.get_common_params()
     training_params = params_reader.get_training_params()
+    pass
 
 
 if __name__ == "__main__":
