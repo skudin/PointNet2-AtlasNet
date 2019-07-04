@@ -210,4 +210,4 @@ dmypy.json
 
 # Custom.
 .idea
-!src/scripts
+!atlasnet2/scripts
