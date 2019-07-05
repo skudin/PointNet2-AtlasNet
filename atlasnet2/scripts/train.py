@@ -1,6 +1,8 @@
 import argparse
 import json
 
+import atlasnet2.utils.helpers as h
+
 
 class ParamsReader:
     def __init__(self):
@@ -41,6 +43,8 @@ def main():
 
     common_params = params_reader.get_common_params()
     training_params = params_reader.get_training_params()
+
+    experiment_path, snapshots_path = h.create_folders_for_experiments(common_params["experiment_name"])
     pass
 
 
