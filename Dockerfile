@@ -3,6 +3,8 @@ FROM nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04
 
 MAINTAINER Stepan Kudin <kudin.stepan@yandex.ru>
 
+ENV PYTHONPATH=/app:$PYTHONPATH
+
 # Install some basic utilities
 RUN apt-get update --fix-missing && apt-get install -y \
     curl \
@@ -34,8 +36,11 @@ RUN mkdir /app
 WORKDIR /app
 
 # Create a non-root user and switch to it.
-RUN adduser --disabled-password --gecos '' --shell /bin/bash user \
- && chown -R user:user /app
+ARG uid=1000
+ARG gid=1000
+RUN addgroup --gid $gid user && \
+    adduser --uid $uid --ingroup user --disabled-password --gecos '' --shell /bin/bash user && \
+    chown -R user:user /app
 RUN echo "user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/90-user
 USER user
 
