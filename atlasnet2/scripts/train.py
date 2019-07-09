@@ -1,5 +1,7 @@
 import argparse
 import json
+import logging
+import os
 
 import atlasnet2.utils.helpers as h
 
@@ -45,6 +47,9 @@ def main():
     training_params = params_reader.get_training_params()
 
     experiment_path, snapshots_path = h.create_folders_for_experiments(common_params["experiment_name"])
+
+    logger = h.set_logging("", logging_level=logging.DEBUG, logging_to_stdout=True,
+                           log_filename=os.path.join(experiment_path, "training.log"))
     pass
 
 
