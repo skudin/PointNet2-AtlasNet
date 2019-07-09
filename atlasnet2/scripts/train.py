@@ -2,11 +2,15 @@ import argparse
 import json
 import logging
 import os
+import shutil
+import visdom
 
-import atlasnet2.utils.helpers as h
+import numpy as np
+
+import atlasnet2.libs.helpers as h
 
 
-class ParamsReader:
+class Settings:
     def __init__(self):
         self._common_params_filename = None
         self._training_params_filename = None
@@ -29,6 +33,10 @@ class ParamsReader:
     def get_training_params(self):
         return self._parse_params_file(self._training_params_filename)
 
+    def save_settings(self, path):
+        shutil.copy(self._common_params_filename, path)
+        shutil.copy(self._training_params_filename, path)
+
     @staticmethod
     def _parse_params_file(filename):
         with open(filename, "r") as fp:
@@ -40,16 +48,24 @@ class Trainer:
 
 
 def main():
-    params_reader = ParamsReader()
-    params_reader.parse_command_prompt()
+    settings = Settings()
+    settings.parse_command_prompt()
 
-    common_params = params_reader.get_common_params()
-    training_params = params_reader.get_training_params()
+    common_params = settings.get_common_params()
+    training_params = settings.get_training_params()
 
     experiment_path, snapshots_path = h.create_folders_for_experiments(common_params["experiment_name"])
 
     logger = h.set_logging("", logging_level=logging.DEBUG, logging_to_stdout=True,
                            log_filename=os.path.join(experiment_path, "training.log"))
+
+    logger.info("Saving startup settings to the experiment folder.")
+    settings.save_settings(experiment_path)
+    logger.info("Done!")
+
+    vis = visdom.Visdom(server="http://10.37.2.31")
+    vis.text('Hello, world!')
+    vis.image(np.ones((3, 10, 10)))
     pass
 
 
