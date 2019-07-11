@@ -4,10 +4,9 @@ import logging
 import os
 import shutil
 
-import numpy as np
-
 import atlasnet2.libs.helpers as h
 from atlasnet2.libs.visdom_wrapper import VisdomWrapper
+from atlasnet2.libs.network_wrapper import NetworkWrapper
 
 
 class Settings:
@@ -43,10 +42,6 @@ class Settings:
             return json.load(fp)
 
 
-class Trainer:
-    pass
-
-
 def main():
     settings = Settings()
     settings.parse_command_prompt()
@@ -64,7 +59,9 @@ def main():
     logger.info("Done!")
 
     vis = VisdomWrapper()
-    pass
+
+    network = NetworkWrapper()
+    network.train()
 
 
 if __name__ == "__main__":
