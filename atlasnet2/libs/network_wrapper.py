@@ -1,7 +1,9 @@
+from atlasnet2.networks.network import Network
+
+
 class NetworkWrapper:
     def __init__(self):
         self._network = Network()
-        pass
 
     def train(self):
         self._train_data_loader = self._get_data_loader("train")
