@@ -3,11 +3,11 @@ import json
 import logging
 import os
 import shutil
-import visdom
 
 import numpy as np
 
 import atlasnet2.libs.helpers as h
+from atlasnet2.libs.visdom_wrapper import VisdomWrapper
 
 
 class Settings:
@@ -63,9 +63,7 @@ def main():
     settings.save_settings(experiment_path)
     logger.info("Done!")
 
-    vis = visdom.Visdom(server="http://10.37.2.31")
-    vis.text('Hello, world!')
-    vis.image(np.ones((3, 10, 10)))
+    vis = VisdomWrapper()
     pass
 
 
