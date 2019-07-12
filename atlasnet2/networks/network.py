@@ -1,2 +1,9 @@
 class Network:
-    pass
+    def forward(self, points_clouds):
+        pass
+
+    def backward(self, loss):
+        pass
+
+    def set_train_mode(self):
+        pass

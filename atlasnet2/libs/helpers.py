@@ -45,4 +45,11 @@ def set_logging(name, logging_level, logging_to_stdout=False, log_filename=None)
 
 
 class AverageValueMeter:
-    pass
+    def __init__(self):
+        self.avg = 0.0
+
+    def update(self):
+        pass
+
+    def reset(self):
+        pass
