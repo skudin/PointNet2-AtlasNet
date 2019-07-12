@@ -1,4 +1,5 @@
 from atlasnet2.networks.network import Network
+from atlasnet2.libs.helpers import AverageValueMeter
 
 
 class NetworkWrapper:
@@ -9,6 +10,9 @@ class NetworkWrapper:
         self._network = Network()
 
         self._loss = None
+
+        self._train_loss = AverageValueMeter()
+        self._test_loss = AverageValueMeter()
 
     def train(self):
         pass

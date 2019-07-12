@@ -42,3 +42,7 @@ def set_logging(name, logging_level, logging_to_stdout=False, log_filename=None)
         logger.addHandler(logging.FileHandler(log_filename))
 
     return logger
+
+
+class AverageValueMeter:
+    pass
