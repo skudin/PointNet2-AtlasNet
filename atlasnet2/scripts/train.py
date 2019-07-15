@@ -8,8 +8,7 @@ from atlasnet2.libs.network_wrapper import NetworkWrapper
 
 
 def main():
-    settings = Settings()
-    settings.parse_command_prompt()
+    settings = Settings("train")
 
     common_params = settings.get_common_params()
     training_params = settings.get_training_params()
