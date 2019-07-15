@@ -6,8 +6,12 @@ import sys
 import atlasnet2.configuration as conf
 
 
-def create_folders_for_experiments(experiment_name):
-    experiment_path = os.path.join(conf.BASE_PATH, "experiments", experiment_name)
+def get_path_to_experiments_folder():
+    return os.path.join(conf.BASE_PATH, "experiments")
+
+
+def create_folders_for_experiment(experiment_name):
+    experiment_path = os.path.join(get_path_to_experiments_folder(), experiment_name)
     create_folder_with_dialog(experiment_path)
 
     snapshots_path = os.path.join(experiment_path, "snapshots")
