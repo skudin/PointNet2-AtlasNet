@@ -23,9 +23,9 @@ def main():
     logger.info("Done!")
 
     vis = VisdomWrapper()
-
-    network = NetworkWrapper()
-    network.train()
+    #
+    # network = NetworkWrapper()
+    # network.train()
 
 
 if __name__ == "__main__":

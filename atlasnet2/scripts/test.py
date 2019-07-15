@@ -1,5 +1,9 @@
+from atlasnet2.libs.settings import Settings
+
+
 def main():
-    print("Hello world!")
+    settings = Settings("test")
+    pass
 
 
 if __name__ == "__main__":

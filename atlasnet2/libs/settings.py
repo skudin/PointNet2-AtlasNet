@@ -44,8 +44,8 @@ class Settings:
         return self._parse_params_file(self._training_params_filename)
 
     def save_settings(self, path):
-        shutil.copy(self._common_params_filename, path)
-        shutil.copy(self._training_params_filename, path)
+        shutil.copy(self._common_params_filename, os.path.join(path, "common.json"))
+        shutil.copy(self._training_params_filename, os.path.join(path, "training.json"))
 
     @staticmethod
     def _parse_params_file(filename):
