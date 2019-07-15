@@ -7,3 +7,6 @@ class Network:
 
     def set_train_mode(self):
         pass
+
+    def set_test_mode(self):
+        pass

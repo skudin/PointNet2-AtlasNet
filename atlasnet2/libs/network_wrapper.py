@@ -27,7 +27,6 @@ class NetworkWrapper:
             self._test_epoch(epoch)
             self._save_snapshot(epoch)
             self._print_epoch_stat(epoch)
-        pass
 
     def test(self):
         pass
@@ -52,7 +51,20 @@ class NetworkWrapper:
         self._train_curve.append(self._train_loss.avg)
 
     def _test_epoch(self, epoch):
-        pass
+        self._test_loss.reset()
+        self._network.set_test_mode()
+
+        with torch.no_grad():
+            for batch_num, batch_data in enumerate(self._test_data_loader, 1):
+                reconstructed_point_clouds = self._network.forward(batch_data)
+
+                dist_1, dist_2 = self._loss_func(batch_data, reconstructed_point_clouds)
+                loss = torch.mean(dist_1) + torch.mean(dist_2)
+
+                loss_value = loss.item()
+                self._test_loss.update(loss_value)
+
+            self._test_curve.append(self._test_loss.avg)
 
     def _save_snapshot(self, epoch):
         pass
