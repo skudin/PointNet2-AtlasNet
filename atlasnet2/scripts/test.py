@@ -15,7 +15,8 @@ def main():
     logger = h.set_logging("", logging_level=logging.DEBUG, logging_to_stdout=True,
                            log_filename=os.path.join(result_path, "testing.log"))
 
-    pass
+    network = NetworkWrapper()
+    network.test()
 
 
 if __name__ == "__main__":
