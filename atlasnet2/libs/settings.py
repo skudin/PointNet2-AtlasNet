@@ -10,7 +10,8 @@ class Settings:
     def __init__(self, mode):
         self._common_params_filename = None
         self._training_params_filename = None
-        self._snapshot_num = None
+        self.snapshot_num = None
+        self.experiment_folder = None
 
         self._read_command_prompt_parser(mode)
 
@@ -32,10 +33,10 @@ class Settings:
             self._common_params_filename = args.common_parameters
             self._training_params_filename = args.training_parameters
         else:
-            experiment_folder = os.path.join(h.get_path_to_experiments_filder(), args.experiment)
-            self._common_params_filename = os.path.join(experiment_folder, "common.json")
-            self._training_params_filename = os.path.join(experiment_folder, "training.json")
-            self._snapshot_num = args.snapshot_num
+            self.experiment_folder = os.path.join(h.get_path_to_experiments_folder(), args.experiment)
+            self._common_params_filename = os.path.join(self.experiment_folder, "common.json")
+            self._training_params_filename = os.path.join(self.experiment_folder, "training.json")
+            self.snapshot_num = args.snapshot_num
 
     def get_common_params(self):
         return self._parse_params_file(self._common_params_filename)
