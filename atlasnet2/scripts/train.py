@@ -23,6 +23,7 @@ def main():
     logger.info("Done!")
 
     vis = VisdomWrapper()
+    pass
     #
     # network = NetworkWrapper()
     # network.train()
