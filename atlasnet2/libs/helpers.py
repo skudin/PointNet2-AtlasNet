@@ -2,6 +2,7 @@ import os
 import shutil
 import logging
 import sys
+from typing import Union
 
 import atlasnet2.configuration as conf
 
@@ -34,7 +35,8 @@ def create_folder_with_dialog(path):
     os.makedirs(path)
 
 
-def set_logging(name, logging_level, logging_to_stdout=False, log_filename=None):
+def set_logging(name: str, logging_level: int, logging_to_stdout: bool = False,
+                log_filename: Union[str, None] = None) -> logging.Logger:
     logger = logging.getLogger(name)
     logger.setLevel(logging_level)
 

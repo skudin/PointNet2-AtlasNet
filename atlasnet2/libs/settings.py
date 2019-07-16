@@ -14,6 +14,7 @@ class Settings:
         self.experiment_folder = None
 
         self._read_command_prompt_parser(mode)
+        self._init_values()
 
     def _read_command_prompt_parser(self, mode):
         parser = argparse.ArgumentParser()
@@ -38,11 +39,17 @@ class Settings:
             self._training_params_filename = os.path.join(self.experiment_folder, "training.json")
             self.snapshot_num = args.snapshot_num
 
-    def get_common_params(self):
-        return self._parse_params_file(self._common_params_filename)
+    def _init_values(self):
+        common_params = self._parse_params_file(self._common_params_filename)
+        training_params = self._parse_params_file(self._training_params_filename)
 
-    def get_training_params(self):
-        return self._parse_params_file(self._training_params_filename)
+        self._settings = {**common_params, **training_params}
+
+        if self._settings["visdom_env"] is None:
+            self._settings["visdom_env"] = self._settings["experiment"]
+
+    def __getitem__(self, key: str):
+        return self._settings[key]
 
     def save_settings(self, path):
         shutil.copy(self._common_params_filename, os.path.join(path, "common.json"))
