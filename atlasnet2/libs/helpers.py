@@ -20,11 +20,6 @@ def create_folders_for_experiment(experiment_name):
     return experiment_path, snapshots_path
 
 
-def create_folder_for_result_of_snapshot(experiment_folder: str, snapshot_num: int):
-    path = os.path.join(experiment_folder, "%d" % snapshot_num)
-    create_folder_with_dialog(path)
-
-
 def create_folder_with_dialog(path):
     if os.path.exists(path):
         print("%s exists. Remove it? (y/n)" % path)
