@@ -3,6 +3,7 @@ import os
 import torch
 from torch.utils.data import DataLoader
 
+from atlasnet2.datasets.shapenet_dataset import ShapeNetDataset
 from atlasnet2.networks.network import Network
 from atlasnet2.libs.helpers import AverageValueMeter
 
@@ -35,6 +36,7 @@ class NetworkWrapper:
         pass
 
     def _get_data_loader(self, dataset_part: str, dataset_path: str, mode: str):
+        dataset = ShapeNetDataset(dataset_path=dataset_path)
         return None
 
     def _train_epoch(self, epoch):
