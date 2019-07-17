@@ -1,5 +1,7 @@
 {
-  "test_param_1": "value_1",
-  "test_param_2": "value_2",
-  "test_param_3": "value_3"
+  "dataset": "/app/data/shapenet",
+  "num_epochs": 10,
+  "num_points": 2500,
+  "batch_size": 16,
+  "num_workers": 2
 }
