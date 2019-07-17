@@ -20,10 +20,9 @@ def main():
     logger.info("Done!")
 
     vis = VisdomWrapper(server=settings["visdom_server"], port=settings["visdom_port"], env=settings["visdom_env"])
-    pass
-    #
-    # network = NetworkWrapper()
-    # network.train()
+
+    network = NetworkWrapper(mode="train")
+    network.train()
 
 
 if __name__ == "__main__":

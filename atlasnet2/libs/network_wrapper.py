@@ -1,4 +1,7 @@
+import os
+
 import torch
+from torch.utils.data import DataLoader
 
 from atlasnet2.networks.network import Network
 from atlasnet2.libs.helpers import AverageValueMeter
@@ -31,7 +34,7 @@ class NetworkWrapper:
     def test(self):
         pass
 
-    def _get_data_loader(self, dataset_part, dataset_path, mode):
+    def _get_data_loader(self, dataset_part: str, dataset_path: str, mode: str):
         return None
 
     def _train_epoch(self, epoch):
