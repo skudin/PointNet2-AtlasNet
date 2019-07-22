@@ -18,6 +18,7 @@ class ShapeNetDataset(data.Dataset):
         self._point_clouds_path = os.path.join(self._dataset_path, "customShapeNet")
 
         self._meta = dict()
+        self._datapath = list()
 
         self._categories = self._get_categories()
         logger.info("Categories: %s" % str(self._categories))
@@ -73,3 +74,7 @@ class ShapeNetDataset(data.Dataset):
 
         for item in empty:
             del self._categories[item]
+
+        for item in self._categories:
+            for filenames in self._meta[item]:
+                self._datapath.append(filenames)
