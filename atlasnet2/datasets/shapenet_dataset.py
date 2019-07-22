@@ -1,3 +1,4 @@
+import logging
 import os
 
 import torch.utils.data as data
@@ -5,11 +6,15 @@ import torch.utils.data as data
 import atlasnet2.configuration as conf
 
 
+logger = logging.getLogger(__name__)
+
+
 class ShapeNetDataset(data.Dataset):
     def __init__(self, dataset_path: str = os.path.join(conf.BASE_PATH, "data", "shapenet")):
         self._dataset_path = dataset_path
 
         self._categories = self._get_categories()
+        logger.debug("Categories: %s" % str(self._categories))
 
     def __len__(self):
         pass

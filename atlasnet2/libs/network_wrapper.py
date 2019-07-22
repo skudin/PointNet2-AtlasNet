@@ -1,4 +1,4 @@
-import os
+import logging
 
 import torch
 from torch.utils.data import DataLoader
@@ -6,6 +6,9 @@ from torch.utils.data import DataLoader
 from atlasnet2.datasets.shapenet_dataset import ShapeNetDataset
 from atlasnet2.networks.network import Network
 from atlasnet2.libs.helpers import AverageValueMeter
+
+
+logger = logging.getLogger(__name__)
 
 
 class NetworkWrapper:
