@@ -2,6 +2,7 @@ import logging
 import os
 
 import torch.utils.data as data
+import torchvision.transforms as transforms
 
 import atlasnet2.configuration as conf
 
@@ -24,7 +25,10 @@ class ShapeNetDataset(data.Dataset):
         logger.info("Categories: %s" % str(self._categories))
 
         self._indexing()
-        pass
+        logger.info("Indexing is finished.")
+
+        self._init_transforms()
+        logger.info("All transformations are initialized.")
 
     def __len__(self):
         pass
@@ -78,3 +82,19 @@ class ShapeNetDataset(data.Dataset):
         for item in self._categories:
             for filenames in self._meta[item]:
                 self._datapath.append(filenames)
+
+    def _init_transforms(self):
+        self._transforms = transforms.Compose([
+            transforms.Resize(size=224, interpolation=2),
+            transforms.ToTensor()
+        ])
+
+        # RandomResizedCrop or RandomCrop
+        self._data_augmentation = transforms.Compose([
+            transforms.RandomCrop(127),
+            transforms.RandomHorizontalFlip(),
+        ])
+
+        self._validating_transform = transforms.Compose([
+            transforms.CenterCrop(127),
+        ])
