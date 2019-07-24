@@ -34,6 +34,7 @@ class ShapeNetDataset(data.Dataset):
         return len(self._datapath)
 
     def __getitem__(self, index):
+
         pass
 
     def _get_categories(self):
@@ -71,8 +72,12 @@ class ShapeNetDataset(data.Dataset):
             if len(index) != 0:
                 self._meta[item] = list()
                 for filename in index:
-                    self._meta[item].append((os.path.join(img_folder, filename, "rendering"),
-                                             os.path.join(ply_folder, filename + ".points.ply"), item, filename))
+                    self._meta[item].append({
+                        "renders_path": os.path.join(img_folder, filename, "rendering"),
+                        "point_cloud": os.path.join(ply_folder, filename + ".points.ply"),
+                        "category": item,
+                        "item": filename
+                    })
             else:
                 empty.append(item)
 
