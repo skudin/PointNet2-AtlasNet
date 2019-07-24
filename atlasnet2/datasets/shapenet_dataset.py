@@ -31,7 +31,7 @@ class ShapeNetDataset(data.Dataset):
         logger.info("All transformations are initialized.")
 
     def __len__(self):
-        pass
+        return len(self._datapath)
 
     def __getitem__(self, index):
         pass
