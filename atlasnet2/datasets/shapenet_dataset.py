@@ -1,8 +1,11 @@
 import logging
 import os
 
+import torch
 import torch.utils.data as data
 import torchvision.transforms as transforms
+from plyfile import PlyData
+import numpy as np
 
 import atlasnet2.configuration as conf
 
@@ -11,15 +14,18 @@ logger = logging.getLogger(__name__)
 
 
 class ShapeNetDataset(data.Dataset):
-    def __init__(self, dataset_path: str = os.path.join(conf.BASE_PATH, "data", "shapenet"), mode: str = "train"):
+    def __init__(self, dataset_path: str = os.path.join(conf.BASE_PATH, "data", "shapenet"), mode: str = "train",
+                 num_points: int = 2500, include_normals: bool = False):
         self._dataset_path = dataset_path
         self._mode = mode
+        self._num_points = num_points
+        self._include_normals = include_normals
 
         self._img_path = os.path.join(self._dataset_path, "ShapeNet", "ShapeNetRendering")
         self._point_clouds_path = os.path.join(self._dataset_path, "customShapeNet")
 
         self._meta = dict()
-        self._datapath = list()
+        self._items = list()
 
         self._categories = self._get_categories()
         logger.info("Categories: %s" % str(self._categories))
@@ -31,11 +37,24 @@ class ShapeNetDataset(data.Dataset):
         logger.info("All transformations are initialized.")
 
     def __len__(self):
-        return len(self._datapath)
+        return len(self._items)
 
     def __getitem__(self, index):
+        item = self._items[index]
+        with open(item["point_cloud"], "rb") as fp:
+            ply_data = PlyData.read(fp)
 
-        pass
+        raw_point_cloud = np.vstack([ply_data["vertex"][key].T for key, _ in ply_data["vertex"].data.dtype.descr]).T
+
+        if not self._include_normals:
+            raw_point_cloud = raw_point_cloud[:, 0: 3]
+
+        point_cloud = raw_point_cloud[np.random.choice(raw_point_cloud.shape[0], self._num_points, replace=False), :]
+        np.random.shuffle(point_cloud)
+
+        point_cloud = torch.from_numpy(point_cloud)
+
+        return point_cloud
 
     def _get_categories(self):
         result = dict()
@@ -73,7 +92,7 @@ class ShapeNetDataset(data.Dataset):
                 self._meta[item] = list()
                 for filename in index:
                     self._meta[item].append({
-                        "renders_path": os.path.join(img_folder, filename, "rendering"),
+                        "rendering_path": os.path.join(img_folder, filename, "rendering"),
                         "point_cloud": os.path.join(ply_folder, filename + ".points.ply"),
                         "category": item,
                         "item": filename
@@ -86,7 +105,7 @@ class ShapeNetDataset(data.Dataset):
 
         for item in self._categories:
             for filenames in self._meta[item]:
-                self._datapath.append(filenames)
+                self._items.append(filenames)
 
     def _init_transforms(self):
         self._transforms = transforms.Compose([
@@ -103,3 +122,9 @@ class ShapeNetDataset(data.Dataset):
         self._validating_transform = transforms.Compose([
             transforms.CenterCrop(127),
         ])
+
+
+if __name__ == "__main__":
+    dataset = ShapeNetDataset()
+    tmp = dataset[0]
+    pass
