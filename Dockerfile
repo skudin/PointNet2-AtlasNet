@@ -21,6 +21,7 @@ RUN apt-get update --fix-missing && apt-get install -y \
     unzip \
     python3-minimal \
     python3-pip \
+    gcc \
  && rm -rf /var/lib/apt/lists/*
 
 # Pytorch and torchvision.
@@ -30,6 +31,12 @@ RUN pip3 install https://download.pytorch.org/whl/cu100/torch-1.1.0-cp36-cp36m-l
 # Install requirements.
 COPY requirements.txt /tmp/requirements.txt
 RUN pip3 install -r /tmp/requirements.txt
+
+# Install additional packages.
+COPY packages/chamfer /tmp/chamfer
+RUN cd /tmp/chamfer && \
+    python3 setup.py build_ext --inplace && \
+    pip3 install -e .
 
 # Create a working directory
 RUN mkdir /app
