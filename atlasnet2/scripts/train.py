@@ -21,7 +21,9 @@ def main():
 
     vis = VisdomWrapper(server=settings["visdom_server"], port=settings["visdom_port"], env=settings["visdom_env"])
 
-    network = NetworkWrapper(mode="train", dataset_path=settings["dataset"], num_epochs=settings["num_epochs"])
+    network = NetworkWrapper(mode="train", dataset_path=settings["dataset"], num_epochs=settings["num_epochs"],
+                             num_points=settings["num_points"], batch_size=settings["batch_size"],
+                             num_workers=settings["num_workers"])
     # network.train()
 
 

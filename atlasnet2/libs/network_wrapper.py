@@ -12,11 +12,17 @@ logger = logging.getLogger(__name__)
 
 
 class NetworkWrapper:
-    def __init__(self, mode, dataset_path, num_epochs):
+    def __init__(self, mode: str, dataset_path: str, num_epochs: int, num_points: int, batch_size: int,
+                 num_workers: int):
+        self._mode = mode
+        self._dataset_path = dataset_path
         self._num_epochs = num_epochs
+        self._num_points = num_points
+        self._batch_size = batch_size
+        self._num_workers = num_workers
 
-        self._train_data_loader = self._get_data_loader("train", dataset_path, mode)
-        self._test_data_loader = self._get_data_loader("test", dataset_path, mode)
+        self._train_data_loader = self._get_data_loader("train")
+        self._test_data_loader = self._get_data_loader("test")
 
         self._network = Network()
 
@@ -38,9 +44,31 @@ class NetworkWrapper:
     def test(self):
         pass
 
-    def _get_data_loader(self, dataset_part: str, dataset_path: str, mode: str):
-        dataset = ShapeNetDataset(dataset_path=dataset_path)
-        return None
+    def _get_data_loader(self, dataset_part: str = "test"):
+        logger.info("\nInitializing data loader. Mode: %s, dataset part: %s.\n" % (self._mode, dataset_part))
+
+        if self._mode == "train":
+            if dataset_part == "train":
+                return DataLoader(
+                    dataset=ShapeNetDataset(dataset_path=self._dataset_path, mode="train", num_points=self._num_points),
+                    batch_size=self._batch_size,
+                    shuffle=True,
+                    num_workers=self._num_workers
+                )
+            else:
+                return DataLoader(
+                    dataset=ShapeNetDataset(dataset_path=self._dataset_path, mode="test", num_points=self._num_points),
+                    batch_size=self._batch_size,
+                    shuffle=False,
+                    num_workers=self._num_workers
+                )
+        else:
+            return DataLoader(
+                dataset=ShapeNetDataset(dataset_path=self._dataset_path, mode="test", num_points=self._num_points),
+                batch_size=1,
+                shuffle=False,
+                num_workers=1
+            )
 
     def _train_epoch(self, epoch):
         self._train_loss.reset()

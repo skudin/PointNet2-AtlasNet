@@ -86,7 +86,7 @@ class ShapeNetDataset(data.Dataset):
             if self._mode == "train":
                 index = index[: int(len(index) * 0.8)]
             else:
-                index = index[int(len(index)) * 0.8:]
+                index = index[int(len(index) * 0.8):]
 
             if len(index) != 0:
                 self._meta[item] = list()
