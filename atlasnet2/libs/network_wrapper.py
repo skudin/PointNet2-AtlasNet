@@ -7,6 +7,8 @@ from atlasnet2.datasets.shapenet_dataset import ShapeNetDataset
 from atlasnet2.networks.network import Network
 from atlasnet2.libs.helpers import AverageValueMeter
 
+import dist_chamfer
+
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +28,7 @@ class NetworkWrapper:
 
         self._network = Network()
 
-        self._loss_func = None
+        self._loss_func = dist_chamfer.chamferDist()
 
         self._train_loss = AverageValueMeter()
         self._test_loss = AverageValueMeter()
