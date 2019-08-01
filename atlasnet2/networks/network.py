@@ -10,10 +10,11 @@ class Network:
         self._optimizer = optim.Adam(self._network.parameters(), lr=learning_rate)
 
     def backward(self, loss):
-        pass
+        loss.backward()
+        self._optimizer.step()
 
     def set_train_mode(self):
-        pass
+        self._network.train()
 
     def set_test_mode(self):
-        pass
+        self._network.eval()
