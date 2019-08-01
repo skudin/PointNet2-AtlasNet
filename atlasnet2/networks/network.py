@@ -1,31 +1,13 @@
 import torch
-import torch.nn as nn
+import torch.optim as optim
 
-import atlasnet2.networks.atlasnet as atlasnet
-import atlasnet2.networks.pointnet2 as pointnet2
+from atlasnet2.networks.autoencoder import Autoencoder
 
 
-class Network(nn.Module):
-    def __init__(self, encoder_type: str = "pointnet"):
-        super().__init__()
-
-        if encoder_type == "pointnet":
-            self._encoder = atlasnet.Encoder()
-        else:
-            self._decoder = pointnet2.Encoder()
-
-        self._decoder = atlasnet.Decoder()
-
-    def forward(self, x):
-        x = self._encoder.forward(x)
-
-        return self._decoder.forward(x)
-
-    def inference(self, x, num_point=None):
-        with torch.no_grad():
-            x = self._encoder.forward(x)
-    
-            return self._decoder.inference(x, num_point)
+class Network:
+    def __init__(self, encoder_type: str = "pointnet", learning_rate=0.001):
+        self._network = Autoencoder(encoder_type)
+        self._optimizer = optim.Adam(self._network.parameters(), lr=learning_rate)
 
     def backward(self, loss):
         pass
