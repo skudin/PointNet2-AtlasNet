@@ -23,7 +23,8 @@ def main():
 
     network = NetworkWrapper(mode="train", dataset_path=settings["dataset"], num_epochs=settings["num_epochs"],
                              num_points=settings["num_points"], batch_size=settings["batch_size"],
-                             num_workers=settings["num_workers"])
+                             num_workers=settings["num_workers"], encoder_type=settings["encoder_type"],
+                             learning_rate=settings["learning_rate"])
     # network.train()
 
 
