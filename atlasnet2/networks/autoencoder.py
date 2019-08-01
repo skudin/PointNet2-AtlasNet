@@ -1,3 +1,6 @@
+from typing import Union
+
+import torch
 import torch.nn as nn
 
 import atlasnet2.networks.atlasnet as atlasnet
@@ -15,12 +18,12 @@ class Autoencoder(nn.Module):
 
         self._decoder = atlasnet.Decoder()
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor):
         x = self._encoder.forward(x)
 
         return self._decoder.forward(x)
 
-    def inference(self, x, num_point=None):
+    def inference(self, x: torch.Tensor, num_point: Union[int, None] = None):
         with torch.no_grad():
             x = self._encoder.forward(x)
 
