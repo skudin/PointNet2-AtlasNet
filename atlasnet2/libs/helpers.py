@@ -50,12 +50,34 @@ def set_logging(name: str, logging_level: int, logging_to_stdout: bool = False,
     return logger
 
 
+# Initialise weights of network.
+def weights_init(m):
+    class_name = m.__class__.__name__
+
+    if class_name.find("Conv") != -1:
+        if hasattr(m, "weight"):
+            m.weight.data.normal_(0.0, 0.02)
+    elif class_name.find("BatchNorm") != -1:
+        if hasattr(m, "weight"):
+            m.weight.data.normal_(1.0, 0.02)
+        if hasattr(m, "bias"):
+            m.bias.data.fill_(0)
+
+
 class AverageValueMeter:
     def __init__(self):
-        self.avg = 0.0
-
-    def update(self):
-        pass
+        self.reset()
 
     def reset(self):
-        pass
+        self._sum = 0.0
+        self._count = 0
+        self._avg = 0.0
+
+    def update(self, value: float):
+        self._sum += value
+        self._count += 1
+        self._avg = self._sum / self._count
+
+    @property
+    def avg(self):
+        return self._avg

@@ -41,8 +41,15 @@ class ShapeNetDataset(data.Dataset):
 
     def __getitem__(self, index):
         item = self._items[index]
-        with open(item["point_cloud"], "rb") as fp:
-            ply_data = PlyData.read(fp)
+
+        # Some data is bad, so reading goes until the first successful.
+        while True:
+            try:
+                with open(item["point_cloud"], "rb") as fp:
+                    ply_data = PlyData.read(fp)
+                break
+            except Exception as e:
+                logger.debug("Exception during parsing: %s" % str(e))
 
         raw_point_cloud = np.vstack([ply_data["vertex"][key].T for key, _ in ply_data["vertex"].data.dtype.descr]).T
 
@@ -54,7 +61,7 @@ class ShapeNetDataset(data.Dataset):
 
         point_cloud = torch.from_numpy(point_cloud)
 
-        return point_cloud
+        return point_cloud, item["category"]
 
     def _get_categories(self):
         result = dict()

@@ -1,5 +1,5 @@
 {
-  "experiment": "repro_atlasnet_ae",
+  "experiment": "test",
   "visdom_server": "http://localhost",
   "visdom_port": 8097,
   "visdom_env": null
