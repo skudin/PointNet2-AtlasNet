@@ -14,19 +14,20 @@ logger = logging.getLogger(__name__)
 
 
 class NetworkWrapper:
-    def __init__(self, mode: str, dataset_path: str, num_epochs: int, num_points: int, batch_size: int,
-                 num_workers: int, encoder_type: str, learning_rate: float):
+    def __init__(self, mode: str, dataset_path: str, num_epochs: int, batch_size: int, num_workers: int,
+                 encoder_type: str, num_points: int, num_primitives: int, bottleneck_size: int, learning_rate: float):
         self._mode = mode
         self._dataset_path = dataset_path
         self._num_epochs = num_epochs
-        self._num_points = num_points
         self._batch_size = batch_size
         self._num_workers = num_workers
+        self._num_points = num_points
 
         self._train_data_loader = self._get_data_loader("train")
         self._test_data_loader = self._get_data_loader("test")
 
-        self._network = Network(encoder_type=encoder_type, learning_rate=learning_rate)
+        self._network = Network(encoder_type=encoder_type, num_points=self._num_points, num_primitives=num_primitives,
+                                bottleneck_size=bottleneck_size, learning_rate=learning_rate)
 
         self._loss_func = dist_chamfer.chamferDist()
 
