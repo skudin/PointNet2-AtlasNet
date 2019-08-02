@@ -1,1 +1,2 @@
 BASE_PATH = "/app"
+RANDOM_SEED = 17

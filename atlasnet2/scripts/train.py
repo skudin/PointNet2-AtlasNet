@@ -1,10 +1,21 @@
 import logging
 import os
+import random
 
+import numpy as np
+import torch
+
+import atlasnet2.configuration as conf
 import atlasnet2.libs.helpers as h
 from atlasnet2.libs.settings import Settings
 from atlasnet2.libs.visdom_wrapper import VisdomWrapper
 from atlasnet2.libs.network_wrapper import NetworkWrapper
+
+
+def set_random_seed():
+    random.seed(conf.RANDOM_SEED)
+    np.random.seed(conf.RANDOM_SEED)
+    torch.manual_seed(conf.RANDOM_SEED)
 
 
 def main():
@@ -20,6 +31,9 @@ def main():
     logger.info("Done!")
 
     vis = VisdomWrapper(server=settings["visdom_server"], port=settings["visdom_port"], env=settings["visdom_env"])
+
+    set_random_seed()
+    logger.info("Random seed %d." % conf.RANDOM_SEED)
 
     network = NetworkWrapper(mode="train", dataset_path=settings["dataset"], num_epochs=settings["num_epochs"],
                              batch_size=settings["batch_size"], num_workers=settings["num_workers"],
