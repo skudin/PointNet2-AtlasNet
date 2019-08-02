@@ -77,15 +77,16 @@ class NetworkWrapper:
         self._train_loss.reset()
         self._network.set_train_mode()
 
-        for batch_num, batch_data in enumerate(self._train_data_loader, 1):
-            reconstructed_point_clouds = self._network.forward(batch_data)
+        for batch_num, point_clouds in enumerate(self._train_data_loader, 1):
+            reconstructed_point_clouds = self._network.forward(point_clouds)
 
-            dist_1, dist_2 = self._loss_func(batch_data, reconstructed_point_clouds)
+            dist_1, dist_2 = self._loss_func(point_clouds.cuda(), reconstructed_point_clouds)
             loss = torch.mean(dist_1) + torch.mean(dist_2)
             self._network.backward(loss)
 
             loss_value = loss.item()
-            self._train_loss.update(loss_value)
+            logger.info("loss: %f" % loss_value)
+            # self._train_loss.update(loss_value)
 
         self._train_curve.append(self._train_loss.avg)
 

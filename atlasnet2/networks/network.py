@@ -2,6 +2,7 @@ import torch
 import torch.optim as optim
 
 from atlasnet2.networks.autoencoder import Autoencoder
+import atlasnet2.libs.helpers as h
 
 
 class Network:
@@ -9,10 +10,18 @@ class Network:
                  bottleneck_size=1024, learning_rate: float = 0.001):
         self._network = Autoencoder(encoder_type=encoder_type, num_points=num_points, num_primitives=num_primitives,
                                     bottleneck_size=bottleneck_size)
+        self._network.apply(h.weights_init)
+        self._network.cuda()
+
         self._optimizer = optim.Adam(self._network.parameters(), lr=learning_rate)
 
-    def forward(self, x: torch.Tensor):
-        return self._network(x)
+    def forward(self, tensor: torch.Tensor):
+        self._optimizer.zero_grad()
+
+        tensor = tensor.transpose(2, 1).contiguous()
+        tensor = tensor.cuda()
+
+        return self._network(tensor)
 
     def backward(self, loss):
         loss.backward()

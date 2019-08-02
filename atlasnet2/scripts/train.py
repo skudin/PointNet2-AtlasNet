@@ -26,7 +26,7 @@ def main():
                              encoder_type=settings["encoder_type"], num_points=settings["num_points"],
                              num_primitives=settings["num_primitives"], bottleneck_size=settings["bottleneck_size"],
                              learning_rate=settings["learning_rate"])
-    # network.train()
+    network.train()
 
 
 if __name__ == "__main__":
