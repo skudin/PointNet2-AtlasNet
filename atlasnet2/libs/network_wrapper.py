@@ -86,7 +86,7 @@ class NetworkWrapper:
 
             loss_value = loss.item()
             logger.info("loss: %f" % loss_value)
-            # self._train_loss.update(loss_value)
+            self._train_loss.update(loss_value)
 
         self._train_curve.append(self._train_loss.avg)
 

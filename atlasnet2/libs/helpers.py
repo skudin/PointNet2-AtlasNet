@@ -66,10 +66,18 @@ def weights_init(m):
 
 class AverageValueMeter:
     def __init__(self):
-        self.avg = 0.0
-
-    def update(self):
-        pass
+        self.reset()
 
     def reset(self):
-        pass
+        self._sum = 0.0
+        self._count = 0
+        self._avg = 0.0
+
+    def update(self, value: float):
+        self._sum += value
+        self._count += 1
+        self._avg = self._sum / self._count
+
+    @property
+    def avg(self):
+        return self._avg
