@@ -1,4 +1,5 @@
 import visdom
+import torch
 
 
 class VisdomWrapper:
@@ -14,5 +15,12 @@ class VisdomWrapper:
     def show_graph(self, graph: str):
         pass
 
-    def show_point_cloud(self, name: str):
-        pass
+    def show_point_cloud(self, name: str, point_cloud: torch.Tensor):
+        if self._is_alive:
+            self._vis.scatter(X=point_cloud[0].data.cpu(),
+                              win=name,
+                              opts=dict(
+                                  title=name,
+                                  markersize=2,
+                                  webgl=True
+                              ))

@@ -8,15 +8,19 @@ from atlasnet2.networks.network import Network
 from atlasnet2.libs.helpers import AverageValueMeter
 
 import dist_chamfer
+import atlasnet2.configuration as conf
+from atlasnet2.libs.visdom_wrapper import VisdomWrapper
 
 
 logger = logging.getLogger(__name__)
 
 
 class NetworkWrapper:
-    def __init__(self, mode: str, dataset_path: str, num_epochs: int, batch_size: int, num_workers: int,
-                 encoder_type: str, num_points: int, num_primitives: int, bottleneck_size: int, learning_rate: float):
+    def __init__(self, mode: str, vis: VisdomWrapper, dataset_path: str, num_epochs: int, batch_size: int,
+                 num_workers: int, encoder_type: str, num_points: int, num_primitives: int, bottleneck_size: int,
+                 learning_rate: float):
         self._mode = mode
+        self._vis = vis
         self._dataset_path = dataset_path
         self._num_epochs = num_epochs
         self._batch_size = batch_size
@@ -89,6 +93,10 @@ class NetworkWrapper:
 
             loss_value = loss.item()
             self._train_loss.update(loss_value)
+
+            if batch_num % conf.VISDOM_UPDATE_FREQUENCY:
+                self._vis.show_point_cloud("REAL TRAIN", point_clouds)
+                self._vis.show_point_cloud("FAKE TRAIN", reconstructed_point_clouds)
 
             logger.info(
                 "[%d: %d/%d] train chamfer loss: %f " % (epoch, batch_num, len(self._train_data_loader), loss_value))

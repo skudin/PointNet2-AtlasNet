@@ -35,7 +35,7 @@ def main():
     set_random_seed()
     logger.info("Random seed %d." % conf.RANDOM_SEED)
 
-    network = NetworkWrapper(mode="train", dataset_path=settings["dataset"], num_epochs=settings["num_epochs"],
+    network = NetworkWrapper(mode="train", vis=vis, dataset_path=settings["dataset"], num_epochs=settings["num_epochs"],
                              batch_size=settings["batch_size"], num_workers=settings["num_workers"],
                              encoder_type=settings["encoder_type"], num_points=settings["num_points"],
                              num_primitives=settings["num_primitives"], bottleneck_size=settings["bottleneck_size"],
