@@ -38,11 +38,14 @@ class NetworkWrapper:
         self._test_curve = []
 
     def train(self):
+        logger.info("Training started!")
+
         for epoch in range(self._num_epochs):
             self._train_epoch(epoch)
-            self._test_epoch(epoch)
-            self._save_snapshot(epoch)
-            self._print_epoch_stat(epoch)
+            pass
+            # self._test_epoch(epoch)
+            # self._save_snapshot(epoch)
+            # self._print_epoch_stat(epoch)
 
     def test(self):
         pass
@@ -85,8 +88,10 @@ class NetworkWrapper:
             self._network.backward(loss)
 
             loss_value = loss.item()
-            logger.info("loss: %f" % loss_value)
             self._train_loss.update(loss_value)
+
+            logger.info(
+                "[%d: %d/%d] train chamfer loss: %f " % (epoch, batch_num, len(self._train_data_loader), loss_value))
 
         self._train_curve.append(self._train_loss.avg)
 
