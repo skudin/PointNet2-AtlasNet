@@ -46,8 +46,7 @@ class NetworkWrapper:
 
         for epoch in range(self._num_epochs):
             self._train_epoch(epoch)
-            pass
-            # self._test_epoch(epoch)
+            self._test_epoch(epoch)
             # self._save_snapshot(epoch)
             # self._print_epoch_stat(epoch)
 
@@ -108,14 +107,21 @@ class NetworkWrapper:
         self._network.set_test_mode()
 
         with torch.no_grad():
-            for batch_num, batch_data in enumerate(self._test_data_loader, 1):
-                reconstructed_point_clouds = self._network.forward(batch_data)
+            for batch_num, point_clouds in enumerate(self._test_data_loader, 1):
+                reconstructed_point_clouds = self._network.forward(point_clouds)
 
-                dist_1, dist_2 = self._loss_func(batch_data, reconstructed_point_clouds)
+                dist_1, dist_2 = self._loss_func(point_clouds.cuda(), reconstructed_point_clouds)
                 loss = torch.mean(dist_1) + torch.mean(dist_2)
 
                 loss_value = loss.item()
                 self._test_loss.update(loss_value)
+
+                if batch_num % conf.VISDOM_UPDATE_FREQUENCY:
+                    self._vis.show_point_cloud("REAL TEST", point_clouds)
+                    self._vis.show_point_cloud("FAKE TEST", reconstructed_point_clouds)
+
+                logger.info(
+                    "[%d: %d/%d] test chamfer loss: %f " % (epoch, batch_num, len(self._test_data_loader), loss_value))
 
             self._test_curve.append(self._test_loss.avg)
 
