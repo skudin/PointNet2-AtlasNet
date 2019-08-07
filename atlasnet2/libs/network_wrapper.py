@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 
 import numpy as np
 import torch
@@ -42,15 +43,26 @@ class NetworkWrapper:
         self._test_loss = AverageValueMeter()
         self._best_loss = 1e6
 
+        self._total_learning_time = 0.0
+        self._epoch_learning_time = 0.0
+
     def train(self):
         logger.info("Training started!")
 
         for epoch in range(self._num_epochs):
+            start_time = time.time()
+
             self._train_epoch(epoch)
             self._test_epoch(epoch)
             self._show_graphs()
             self._save_snapshot(epoch)
-            # self._print_epoch_stat(epoch)
+
+            self._epoch_learning_time = time.time() - start_time
+            self._total_learning_time += self._epoch_learning_time
+
+            self._print_epoch_stat(epoch)
+
+        self._print_summary_stat()
 
     def test(self):
         pass
@@ -145,4 +157,12 @@ class NetworkWrapper:
             logger.info("Snapshot saved.")
 
     def _print_epoch_stat(self, epoch):
-        pass
+        logger.info("\nEpoch %d stat:" % epoch)
+        logger.info("\tTrain loss: %f" % self._train_loss.avg)
+        logger.info("\tTest loss: %f" % self._test_loss.avg)
+        logger.info("\tEpoch learning time: %f sec.\n" % self._epoch_learning_time)
+
+    def _print_summary_stat(self):
+        logger.info("\nSummary stat:")
+        logger.info("\tBest score: %.15f" % self._best_loss)
+        logger.info("\tTotal learning time: %f minutes" % (self._total_learning_time / 60.0))
