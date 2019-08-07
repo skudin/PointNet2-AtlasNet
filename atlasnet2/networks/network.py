@@ -32,3 +32,6 @@ class Network:
 
     def set_test_mode(self):
         self._network.eval()
+
+    def save_snapshot(self, path: str):
+        torch.save(self._network.state_dict(), path)

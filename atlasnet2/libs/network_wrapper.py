@@ -1,4 +1,5 @@
 import logging
+import os
 
 import numpy as np
 import torch
@@ -17,12 +18,13 @@ logger = logging.getLogger(__name__)
 
 
 class NetworkWrapper:
-    def __init__(self, mode: str, vis: VisdomWrapper, dataset_path: str, num_epochs: int, batch_size: int,
-                 num_workers: int, encoder_type: str, num_points: int, num_primitives: int, bottleneck_size: int,
-                 learning_rate: float):
+    def __init__(self, mode: str, vis: VisdomWrapper, dataset_path: str, snapshots_path: str, num_epochs: int,
+                 batch_size: int, num_workers: int, encoder_type: str, num_points: int, num_primitives: int,
+                 bottleneck_size: int, learning_rate: float):
         self._mode = mode
         self._vis = vis
         self._dataset_path = dataset_path
+        self._snapshots_path = snapshots_path
         self._num_epochs = num_epochs
         self._batch_size = batch_size
         self._num_workers = num_workers
@@ -38,6 +40,7 @@ class NetworkWrapper:
 
         self._train_loss = AverageValueMeter()
         self._test_loss = AverageValueMeter()
+        self._best_loss = 1e6
 
     def train(self):
         logger.info("Training started!")
@@ -46,7 +49,7 @@ class NetworkWrapper:
             self._train_epoch(epoch)
             self._test_epoch(epoch)
             self._show_graphs()
-            # self._save_snapshot(epoch)
+            self._save_snapshot(epoch)
             # self._print_epoch_stat(epoch)
 
     def test(self):
@@ -131,7 +134,15 @@ class NetworkWrapper:
         self._vis.show_graph("Chamfer log loss")
 
     def _save_snapshot(self, epoch):
-        pass
+        logger.info("Saving network snapshot to latest.pth...")
+        self._network.save_snapshot(os.path.join(self._snapshots_path, "latest.pth"))
+        logger.info("Snapshot of epoch %d saved." % epoch)
+
+        if self._best_loss > self._test_loss.avg:
+            self._best_loss = self._test_loss.avg
+            logger.info("Current network snapshot is best. Saving it to best.pth...")
+            self._network.save_snapshot(os.path.join(self._snapshots_path, "best.pth"))
+            logger.info("Snapshot saved.")
 
     def _print_epoch_stat(self, epoch):
         pass
