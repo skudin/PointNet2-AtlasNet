@@ -1,5 +1,6 @@
 import logging
 
+import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
@@ -38,15 +39,13 @@ class NetworkWrapper:
         self._train_loss = AverageValueMeter()
         self._test_loss = AverageValueMeter()
 
-        self._train_curve = []
-        self._test_curve = []
-
     def train(self):
         logger.info("Training started!")
 
         for epoch in range(self._num_epochs):
             self._train_epoch(epoch)
             self._test_epoch(epoch)
+            self._show_graphs()
             # self._save_snapshot(epoch)
             # self._print_epoch_stat(epoch)
 
@@ -100,7 +99,8 @@ class NetworkWrapper:
             logger.info(
                 "[%d: %d/%d] train chamfer loss: %f " % (epoch, batch_num, len(self._train_data_loader), loss_value))
 
-        self._train_curve.append(self._train_loss.avg)
+        self._vis.append_point_to_curve("Chamfer loss", "train", epoch, self._train_loss.avg)
+        self._vis.append_point_to_curve("Chamfer log loss", "train", epoch, np.log(self._train_loss.avg))
 
     def _test_epoch(self, epoch):
         self._test_loss.reset()
@@ -123,7 +123,12 @@ class NetworkWrapper:
                 logger.info(
                     "[%d: %d/%d] test chamfer loss: %f " % (epoch, batch_num, len(self._test_data_loader), loss_value))
 
-            self._test_curve.append(self._test_loss.avg)
+            self._vis.append_point_to_curve("Chamfer loss", "test", epoch, self._test_loss.avg)
+            self._vis.append_point_to_curve("Chamfer log loss", "test", epoch, np.log(self._test_loss.avg))
+
+    def _show_graphs(self):
+        self._vis.show_graph("Chamfer loss")
+        self._vis.show_graph("Chamfer log loss")
 
     def _save_snapshot(self, epoch):
         pass
