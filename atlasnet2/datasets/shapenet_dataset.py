@@ -54,7 +54,7 @@ class ShapeNetDataset(data.Dataset):
 
         point_cloud = torch.from_numpy(point_cloud)
 
-        return point_cloud
+        return point_cloud, item["category"]
 
     def _get_categories(self):
         result = dict()
