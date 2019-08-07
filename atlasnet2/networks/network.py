@@ -1,8 +1,13 @@
+import logging
+
 import torch
 import torch.optim as optim
 
 from atlasnet2.networks.autoencoder import Autoencoder
 import atlasnet2.libs.helpers as h
+
+
+logger = logging.getLogger(__name__)
 
 
 class Network:
@@ -14,6 +19,9 @@ class Network:
         self._network.cuda()
 
         self._optimizer = optim.Adam(self._network.parameters(), lr=learning_rate)
+
+        logger.info("Network architecture:")
+        logger.info(str(self._network))
 
     def forward(self, tensor: torch.Tensor):
         self._optimizer.zero_grad()
@@ -32,6 +40,9 @@ class Network:
 
     def set_test_mode(self):
         self._network.eval()
+
+    def reset_optimizer(self, learning_rate):
+        self._optimizer = optim.Adam(self._network.parameters(), lr=learning_rate)
 
     def save_snapshot(self, path: str):
         torch.save(self._network.state_dict(), path)

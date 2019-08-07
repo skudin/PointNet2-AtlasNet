@@ -39,7 +39,9 @@ def main():
                              num_epochs=settings["num_epochs"], batch_size=settings["batch_size"],
                              num_workers=settings["num_workers"], encoder_type=settings["encoder_type"],
                              num_points=settings["num_points"], num_primitives=settings["num_primitives"],
-                             bottleneck_size=settings["bottleneck_size"], learning_rate=settings["learning_rate"])
+                             bottleneck_size=settings["bottleneck_size"], learning_rate=settings["learning_rate"],
+                             epoch_num_reset_optimizer=settings["epoch_num_reset_optimizer"],
+                             multiplier_learning_rate=settings["multiplier_learning_rate"])
     network.train()
 
 

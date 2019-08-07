@@ -21,7 +21,8 @@ logger = logging.getLogger(__name__)
 class NetworkWrapper:
     def __init__(self, mode: str, vis: VisdomWrapper, dataset_path: str, snapshots_path: str, num_epochs: int,
                  batch_size: int, num_workers: int, encoder_type: str, num_points: int, num_primitives: int,
-                 bottleneck_size: int, learning_rate: float):
+                 bottleneck_size: int, learning_rate: float, epoch_num_reset_optimizer: int,
+                 multiplier_learning_rate: float):
         self._mode = mode
         self._vis = vis
         self._dataset_path = dataset_path
@@ -30,6 +31,9 @@ class NetworkWrapper:
         self._batch_size = batch_size
         self._num_workers = num_workers
         self._num_points = num_points
+        self._learning_rate = learning_rate
+        self._epoch_num_reset_optimizer = epoch_num_reset_optimizer
+        self._multiplier_learning_rate = multiplier_learning_rate
 
         self._train_data_loader = self._get_data_loader("train")
         self._test_data_loader = self._get_data_loader("test")
@@ -50,6 +54,11 @@ class NetworkWrapper:
         logger.info("Training started!")
 
         for epoch in range(self._num_epochs):
+            if epoch == self._epoch_num_reset_optimizer:
+                new_learning_rate = self._learning_rate * self._multiplier_learning_rate
+                logger.info("Reset optimizer! New learning rate is %.16f." % new_learning_rate)
+                self._network.reset_optimizer(new_learning_rate)
+
             start_time = time.time()
 
             self._train_epoch(epoch)
@@ -164,5 +173,5 @@ class NetworkWrapper:
 
     def _print_summary_stat(self):
         logger.info("\nSummary stat:")
-        logger.info("\tBest score: %.15f" % self._best_loss)
+        logger.info("\tBest score: %.16f" % self._best_loss)
         logger.info("\tTotal learning time: %f minutes" % (self._total_learning_time / 60.0))
