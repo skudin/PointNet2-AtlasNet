@@ -2,6 +2,7 @@ import logging
 import os
 import time
 import copy
+import json
 
 import numpy as np
 import torch
@@ -99,16 +100,12 @@ class NetworkWrapper:
         )
 
     def _get_categories(self):
-        result = []
+        with open(os.path.join(self._dataset_path, "categories.json"), "r") as fp:
+            categories = json.load(fp)
 
-        with open(os.path.join(self._dataset_path, "synsetoffset2category.txt"), "r") as fp:
-            for line in fp:
-                tokens = line.strip().split()
-                result.append(tokens[0])
+        logger.info("Categories: %s" % str(categories))
 
-        logger.info("Categories: %s" % str(result))
-
-        return result
+        return categories
 
     def _train_epoch(self, epoch):
         self._train_loss.reset()
