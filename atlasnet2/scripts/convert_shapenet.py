@@ -26,7 +26,8 @@ def make_index(dataset_path: str):
 
     categories = get_categories(dataset_path)
 
-    meta = list()
+    train_index = list()
+    test_index = list()
 
     for category in categories:
         img_folder = os.path.join(img_path, categories[category])
@@ -45,6 +46,7 @@ def make_index(dataset_path: str):
 
         Case = namedtuple("Case", "id category ply_model renders")
 
+        meta = list()
         for item in index:
             ply_model = os.path.join(ply_folder, item + ".points.ply")
             renders_path = os.path.join(img_folder, item, "rendering")
@@ -53,7 +55,10 @@ def make_index(dataset_path: str):
 
             meta.append(Case(item, category, ply_model, renders))
 
-    return meta, list(categories.keys())
+        train_index.extend(meta[: int(0.8 * len(meta))])
+        test_index.extend(meta[int(0.8 * len(meta)):])
+
+    return train_index, test_index, list(categories.keys())
 
 
 def get_categories(dataset_path: str):
@@ -67,12 +72,9 @@ def get_categories(dataset_path: str):
     return result
 
 
-def convert(index, categories, output_path):
+def convert(train_index, test_index, categories, output_path):
     with open(os.path.join(output_path, "categories.json"), "w") as fp:
         json.dump(categories, fp)
-
-    train_index = index[: int(0.8 * len(index))]
-    test_index = index[int(0.8 * len(index)):]
 
     train_part_path = os.path.join(output_path, "train")
     os.mkdir(train_part_path)
@@ -155,8 +157,8 @@ def main():
         shutil.rmtree(output_path)
     os.makedirs(output_path)
 
-    index, categories = make_index(input_path)
-    convert(index, categories, output_path)
+    train_index, test_index, categories = make_index(input_path)
+    convert(train_index, test_index, categories, output_path)
 
     print("Done!")
 
