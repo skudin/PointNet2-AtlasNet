@@ -84,13 +84,21 @@ class NetworkWrapper:
     def _get_data_loader(self, dataset_part: str = "test"):
         logger.info("\nInitializing data loader. Mode: %s, dataset part: %s.\n" % (self._mode, dataset_part))
 
-        if self._mode == "train" and dataset_part == "train":
-            return DataLoader(
-                dataset=ShapeNetDataset(dataset_path=self._dataset_path, mode="train", num_points=self._num_points),
-                batch_size=self._batch_size,
-                shuffle=True,
-                num_workers=self._num_workers
-            )
+        if self._mode == "train":
+            if dataset_part == "train":
+                return DataLoader(
+                    dataset=ShapeNetDataset(dataset_path=self._dataset_path, mode="train", num_points=self._num_points),
+                    batch_size=self._batch_size,
+                    shuffle=True,
+                    num_workers=self._num_workers
+                )
+            else:
+                return DataLoader(
+                    dataset=ShapeNetDataset(dataset_path=self._dataset_path, mode="test", num_points=self._num_points),
+                    batch_size=self._batch_size,
+                    shuffle=False,
+                    num_workers=self._num_workers
+                )
 
         return DataLoader(
             dataset=ShapeNetDataset(dataset_path=self._dataset_path, mode="test", num_points=self._num_points),
@@ -149,7 +157,10 @@ class NetworkWrapper:
 
                 loss_value = loss.item()
                 self._test_loss.update(loss_value)
-                self._per_cat_test_loss[category[0]].update(loss_value)
+
+                for index in range(dist_1.shape[0]):
+                    item_loss_value = (torch.mean(dist_1[index]) + torch.mean(dist_2[index])).item()
+                    self._per_cat_test_loss[category[index]].update(item_loss_value)
 
                 if batch_num % conf.VISDOM_UPDATE_FREQUENCY:
                     self._vis.show_point_cloud("REAL TEST", point_cloud)
