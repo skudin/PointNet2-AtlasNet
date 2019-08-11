@@ -93,7 +93,7 @@ class NetworkWrapper:
                     num_workers=self._num_workers
                 )
             else:
-                DataLoader(
+                return DataLoader(
                     dataset=ShapeNetDataset(dataset_path=self._dataset_path, mode="test", num_points=self._num_points),
                     batch_size=self._batch_size,
                     shuffle=False,
