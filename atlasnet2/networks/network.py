@@ -46,3 +46,7 @@ class Network:
 
     def save_snapshot(self, path: str):
         torch.save(self._network.state_dict(), path)
+
+    def load_snapshot(self, snapshot: str):
+        self._network.load_state_dict(torch.load(snapshot))
+        logger.info("Snapshot %s loaded!" % snapshot)

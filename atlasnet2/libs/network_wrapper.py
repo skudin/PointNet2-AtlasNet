@@ -26,7 +26,8 @@ class NetworkWrapper:
                  batch_size: int, num_workers: int, encoder_type: str, num_points: int, num_primitives: int,
                  bottleneck_size: int, learning_rate: float, epoch_num_reset_optimizer: int,
                  multiplier_learning_rate: float, vis: Optional[VisdomWrapper] = None,
-                 result_path: Optional[str] = None):
+                 result_path: Optional[str] = None, snapshot: Optional[str] = None,
+                 num_points_gen: Optional[int] = None):
         self._mode = mode
         self._vis = vis
         self._dataset_path = dataset_path
@@ -39,6 +40,8 @@ class NetworkWrapper:
         self._epoch_num_reset_optimizer = epoch_num_reset_optimizer
         self._multiplier_learning_rate = multiplier_learning_rate
         self._result_path = result_path
+        self._snapshot = snapshot
+        self._num_points_gen = num_points_gen
 
         self._train_data_loader = self._get_data_loader("train")
         self._test_data_loader = self._get_data_loader("test")
@@ -82,7 +85,38 @@ class NetworkWrapper:
         self._print_summary_stat()
 
     def test(self):
-        pass
+        snapshot = os.path.join(self._snapshots_path, self._snapshot)
+        self._network.load_snapshot(snapshot)
+
+        self._test_loss.reset()
+        self._reset_per_cat_test_loss()
+        self._network.set_test_mode()
+
+        with torch.no_grad():
+            for batch_num, batch_data in enumerate(self._test_data_loader, 1):
+                point_cloud, category = batch_data
+
+                reconstructed_point_cloud = self._network.forward(point_cloud)
+
+                dist_1, dist_2 = self._loss_func(point_cloud.cuda(), reconstructed_point_cloud)
+                loss = torch.mean(dist_1) + torch.mean(dist_2)
+
+                loss_value = loss.item()
+                self._test_loss.update(loss_value)
+
+                for index in range(dist_1.shape[0]):
+                    item_loss_value = (torch.mean(dist_1[index]) + torch.mean(dist_2[index])).item()
+                    self._per_cat_test_loss[category[index]].update(item_loss_value)
+
+                if batch_num % conf.VISDOM_UPDATE_FREQUENCY:
+                    self._vis.show_point_cloud("REAL TEST", point_cloud)
+                    self._vis.show_point_cloud("FAKE TEST", reconstructed_point_cloud)
+
+                logger.info(
+                    "[%d: %d/%d] test chamfer loss: %f " % (epoch, batch_num, len(self._test_data_loader), loss_value))
+
+            self._vis.append_point_to_curve("Chamfer loss", "test", epoch, self._test_loss.avg)
+            self._vis.append_point_to_curve("Chamfer log loss", "test", epoch, np.log(self._test_loss.avg))
 
     def _get_data_loader(self, dataset_part: str = "test"):
         logger.info("\nInitializing data loader. Mode: %s, dataset part: %s.\n" % (self._mode, dataset_part))
