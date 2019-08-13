@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Optional
 
 import torch
 import torch.nn as nn
@@ -25,8 +25,8 @@ class Autoencoder(nn.Module):
 
         return self._decoder.forward(x)
 
-    def inference(self, x: torch.Tensor, num_point: Union[int, None] = None):
+    def inference(self, x: torch.Tensor, num_points: Optional[int] = None):
         with torch.no_grad():
             x = self._encoder.forward(x)
 
-            return self._decoder.inference(x, num_point)
+            return self._decoder.inference(x, num_points)

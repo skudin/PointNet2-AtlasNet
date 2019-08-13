@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 import torch
 import torch.optim as optim
@@ -31,6 +32,12 @@ class Network:
 
         return self._network(tensor)
 
+    def inference(self, tensor: torch.Tensor, num_points: Optional[int] = None):
+        tensor = tensor.transpose(2, 1).contiguous()
+        tensor = tensor.cuda()
+
+        return self._network.inference(tensor, num_points)
+
     def backward(self, loss):
         loss.backward()
         self._optimizer.step()
@@ -46,3 +53,7 @@ class Network:
 
     def save_snapshot(self, path: str):
         torch.save(self._network.state_dict(), path)
+
+    def load_snapshot(self, snapshot: str):
+        self._network.load_state_dict(torch.load(snapshot))
+        logger.info("Snapshot %s loaded!" % snapshot)
