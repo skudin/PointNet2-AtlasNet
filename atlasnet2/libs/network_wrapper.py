@@ -3,6 +3,7 @@ import os
 import time
 import copy
 import json
+from typing import Optional
 
 import numpy as np
 import torch
@@ -21,10 +22,11 @@ logger = logging.getLogger(__name__)
 
 
 class NetworkWrapper:
-    def __init__(self, mode: str, vis: VisdomWrapper, dataset_path: str, snapshots_path: str, num_epochs: int,
+    def __init__(self, mode: str, dataset_path: str, snapshots_path: str, num_epochs: int,
                  batch_size: int, num_workers: int, encoder_type: str, num_points: int, num_primitives: int,
                  bottleneck_size: int, learning_rate: float, epoch_num_reset_optimizer: int,
-                 multiplier_learning_rate: float):
+                 multiplier_learning_rate: float, vis: Optional[VisdomWrapper] = None,
+                 result_path: Optional[str] = None):
         self._mode = mode
         self._vis = vis
         self._dataset_path = dataset_path
@@ -36,6 +38,7 @@ class NetworkWrapper:
         self._learning_rate = learning_rate
         self._epoch_num_reset_optimizer = epoch_num_reset_optimizer
         self._multiplier_learning_rate = multiplier_learning_rate
+        self._result_path = result_path
 
         self._train_data_loader = self._get_data_loader("train")
         self._test_data_loader = self._get_data_loader("test")
@@ -99,13 +102,16 @@ class NetworkWrapper:
                     shuffle=False,
                     num_workers=self._num_workers
                 )
-
-        return DataLoader(
-            dataset=ShapeNetDataset(dataset_path=self._dataset_path, mode="test", num_points=self._num_points),
-            batch_size=1,
-            shuffle=False,
-            num_workers=1
-        )
+        else:
+            if dataset_part == "test":
+                return DataLoader(
+                    dataset=ShapeNetDataset(dataset_path=self._dataset_path, mode="test", num_points=self._num_points),
+                    batch_size=1,
+                    shuffle=False,
+                    num_workers=1
+                )
+            else:
+                return None
 
     def _get_categories(self):
         with open(os.path.join(self._dataset_path, "categories.json"), "r") as fp:
