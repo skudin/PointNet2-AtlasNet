@@ -9,6 +9,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
+import atlasnet2.libs.helpers as h
 from atlasnet2.datasets.shapenet_dataset import ShapeNetDataset
 from atlasnet2.networks.network import Network
 from atlasnet2.libs.helpers import AverageValueMeter
@@ -36,6 +37,7 @@ class NetworkWrapper:
         self._batch_size = batch_size
         self._num_workers = num_workers
         self._num_points = num_points
+        self._num_primitives = num_primitives
         self._learning_rate = learning_rate
         self._epoch_num_reset_optimizer = epoch_num_reset_optimizer
         self._multiplier_learning_rate = multiplier_learning_rate
@@ -47,8 +49,9 @@ class NetworkWrapper:
         self._test_data_loader = self._get_data_loader("test")
         self._categories = self._get_categories()
 
-        self._network = Network(encoder_type=encoder_type, num_points=self._num_points, num_primitives=num_primitives,
-                                bottleneck_size=bottleneck_size, learning_rate=learning_rate)
+        self._network = Network(encoder_type=encoder_type, num_points=self._num_points,
+                                num_primitives=self._num_primitives, bottleneck_size=bottleneck_size,
+                                learning_rate=learning_rate)
 
         self._loss_func = dist_chamfer.chamferDist()
 
@@ -112,6 +115,48 @@ class NetworkWrapper:
                     "[%d/%d] test chamfer loss: %f " % (batch_num, len(self._test_data_loader), loss_value))
 
         self._print_test_stat()
+
+    def _generate_regular_grid(self):
+        grain = int(np.sqrt(self._num_points_gen / self._num_primitives)) - 1.0
+        logger.info("Grain: %f" % grain)
+
+        faces = []
+        vertices = []
+        vertex_colors = []
+        colors = get_colors(opt.nb_primitives)
+
+        for i in range(0, int(grain + 1)):
+            for j in range(0, int(grain + 1)):
+                vertices.append([i / grain, j / grain])
+
+        for prim in range(0, opt.nb_primitives):
+            for i in range(0, int(grain + 1)):
+                for j in range(0, int(grain + 1)):
+                    vertex_colors.append(colors[prim])
+
+            for i in range(1, int(grain + 1)):
+                for j in range(0, (int(grain + 1) - 1)):
+                    faces.append([(grain + 1) * (grain + 1) * prim + j + (grain + 1) * i,
+                                  (grain + 1) * (grain + 1) * prim + j + (grain + 1) * i + 1,
+                                  (grain + 1) * (grain + 1) * prim + j + (grain + 1) * (i - 1)])
+            for i in range(0, (int((grain + 1)) - 1)):
+                for j in range(1, int((grain + 1))):
+                    faces.append([(grain + 1) * (grain + 1) * prim + j + (grain + 1) * i,
+                                  (grain + 1) * (grain + 1) * prim + j + (grain + 1) * i - 1,
+                                  (grain + 1) * (grain + 1) * prim + j + (grain + 1) * (i + 1)])
+        grid = [vertices for i in range(0, opt.nb_primitives)]
+        grid_pytorch = torch.Tensor(int(opt.nb_primitives * (grain + 1) * (grain + 1)), 2)
+        for i in range(opt.nb_primitives):
+            for j in range(int((grain + 1) * (grain + 1))):
+                grid_pytorch[int(j + (grain + 1) * (grain + 1) * i), 0] = vertices[j][0]
+                grid_pytorch[int(j + (grain + 1) * (grain + 1) * i), 1] = vertices[j][1]
+        print(grid_pytorch)
+        print("grain", grain, 'number vertices', len(vertices) * opt.nb_primitives)
+
+        results = dataset_test.cat.copy()
+        for i in results:
+            results[i] = 0
+        pass
 
     def _get_data_loader(self, dataset_part: str = "test"):
         logger.info("\nInitializing data loader. Mode: %s, dataset part: %s.\n" % (self._mode, dataset_part))
