@@ -108,15 +108,10 @@ class NetworkWrapper:
                     item_loss_value = (torch.mean(dist_1[index]) + torch.mean(dist_2[index])).item()
                     self._per_cat_test_loss[category[index]].update(item_loss_value)
 
-                if batch_num % conf.VISDOM_UPDATE_FREQUENCY:
-                    self._vis.show_point_cloud("REAL TEST", point_cloud)
-                    self._vis.show_point_cloud("FAKE TEST", reconstructed_point_cloud)
-
                 logger.info(
-                    "[%d: %d/%d] test chamfer loss: %f " % (epoch, batch_num, len(self._test_data_loader), loss_value))
+                    "[%d/%d] test chamfer loss: %f " % (batch_num, len(self._test_data_loader), loss_value))
 
-            self._vis.append_point_to_curve("Chamfer loss", "test", epoch, self._test_loss.avg)
-            self._vis.append_point_to_curve("Chamfer log loss", "test", epoch, np.log(self._test_loss.avg))
+        self._print_test_stat()
 
     def _get_data_loader(self, dataset_part: str = "test"):
         logger.info("\nInitializing data loader. Mode: %s, dataset part: %s.\n" % (self._mode, dataset_part))
@@ -246,3 +241,9 @@ class NetworkWrapper:
         logger.info("\tPer cat best score: " + ", ".join(
             ["%s: %.16f" % (key, self._best_per_cat_test_loss[key].avg) for key in self._best_per_cat_test_loss]))
         logger.info("\tTotal learning time: %f minutes" % (self._total_learning_time / 60.0))
+
+    def _print_test_stat(self):
+        logger.info("\nSummary test stat:")
+        logger.info("\tAvg loss: %.16f" % self._test_loss.avg)
+        logger.info("\tPer cat avg loss: " + ", ".join(
+            ["%s: %.16f" % (key, self._per_cat_test_loss[key].avg) for key in self._per_cat_test_loss]))
