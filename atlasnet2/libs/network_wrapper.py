@@ -43,7 +43,10 @@ class NetworkWrapper:
         self._multiplier_learning_rate = multiplier_learning_rate
         self._result_path = result_path
         self._snapshot = snapshot
-        self._num_points_gen = num_points_gen
+
+        self._num_points_gen = num_points
+        if num_points_gen is not None:
+            self._num_points_gen = num_points_gen
 
         self._train_data_loader = self._get_data_loader("train")
         self._test_data_loader = self._get_data_loader("test")
@@ -63,6 +66,9 @@ class NetworkWrapper:
 
         self._total_learning_time = 0.0
         self._epoch_learning_time = 0.0
+
+        if self._mode == "test":
+            self._generate_regular_grid()
 
     def train(self):
         logger.info("Training started!")
@@ -117,19 +123,20 @@ class NetworkWrapper:
         self._print_test_stat()
 
     def _generate_regular_grid(self):
+        logger.info("Generation of regular grid...")
         grain = int(np.sqrt(self._num_points_gen / self._num_primitives)) - 1.0
         logger.info("Grain: %f" % grain)
 
         faces = []
         vertices = []
         vertex_colors = []
-        colors = get_colors(opt.nb_primitives)
+        colors = h.get_colors(self._num_primitives)
 
         for i in range(0, int(grain + 1)):
             for j in range(0, int(grain + 1)):
                 vertices.append([i / grain, j / grain])
 
-        for prim in range(0, opt.nb_primitives):
+        for prim in range(0, self._num_primitives):
             for i in range(0, int(grain + 1)):
                 for j in range(0, int(grain + 1)):
                     vertex_colors.append(colors[prim])
@@ -139,24 +146,22 @@ class NetworkWrapper:
                     faces.append([(grain + 1) * (grain + 1) * prim + j + (grain + 1) * i,
                                   (grain + 1) * (grain + 1) * prim + j + (grain + 1) * i + 1,
                                   (grain + 1) * (grain + 1) * prim + j + (grain + 1) * (i - 1)])
+
             for i in range(0, (int((grain + 1)) - 1)):
                 for j in range(1, int((grain + 1))):
                     faces.append([(grain + 1) * (grain + 1) * prim + j + (grain + 1) * i,
                                   (grain + 1) * (grain + 1) * prim + j + (grain + 1) * i - 1,
                                   (grain + 1) * (grain + 1) * prim + j + (grain + 1) * (i + 1)])
-        grid = [vertices for i in range(0, opt.nb_primitives)]
-        grid_pytorch = torch.Tensor(int(opt.nb_primitives * (grain + 1) * (grain + 1)), 2)
-        for i in range(opt.nb_primitives):
+
+        self._grid = [vertices for i in range(0, self._num_primitives)]
+        grid_pytorch = torch.Tensor(int(self._num_primitives * (grain + 1) * (grain + 1)), 2)
+        for i in range(self._num_primitives):
             for j in range(int((grain + 1) * (grain + 1))):
                 grid_pytorch[int(j + (grain + 1) * (grain + 1) * i), 0] = vertices[j][0]
                 grid_pytorch[int(j + (grain + 1) * (grain + 1) * i), 1] = vertices[j][1]
-        print(grid_pytorch)
-        print("grain", grain, 'number vertices', len(vertices) * opt.nb_primitives)
 
-        results = dataset_test.cat.copy()
-        for i in results:
-            results[i] = 0
-        pass
+        logger.info("Number vertices: %d" % (len(vertices) * self._num_primitives))
+        logger.info("Regular grid generated.")
 
     def _get_data_loader(self, dataset_part: str = "test"):
         logger.info("\nInitializing data loader. Mode: %s, dataset part: %s.\n" % (self._mode, dataset_part))
