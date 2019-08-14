@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 import torch
 import torch.optim as optim
@@ -30,6 +31,12 @@ class Network:
         tensor = tensor.cuda()
 
         return self._network(tensor)
+
+    def inference(self, tensor: torch.Tensor, num_points: Optional[int] = None):
+        tensor = tensor.transpose(2, 1).contiguous()
+        tensor = tensor.cuda()
+
+        return self._network.inference(tensor, num_points)
 
     def backward(self, loss):
         loss.backward()

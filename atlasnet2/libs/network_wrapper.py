@@ -96,7 +96,7 @@ class NetworkWrapper:
             for batch_num, batch_data in enumerate(self._test_data_loader, 1):
                 point_cloud, category = batch_data
 
-                reconstructed_point_cloud = self._network.forward(point_cloud)
+                reconstructed_point_cloud = self._network.inference(point_cloud, self._num_points_gen)
 
                 dist_1, dist_2 = self._loss_func(point_cloud.cuda(), reconstructed_point_cloud)
                 loss = torch.mean(dist_1) + torch.mean(dist_2)
