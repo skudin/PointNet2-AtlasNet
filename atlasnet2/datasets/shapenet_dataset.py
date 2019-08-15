@@ -46,7 +46,7 @@ class ShapeNetDataset(data.Dataset):
 
         point_cloud = torch.from_numpy(point_cloud)
 
-        return point_cloud, item.category
+        return point_cloud, item.category, item.name
 
     def _indexing(self):
         dataset_part_path = os.path.join(self._dataset_path, self._mode)

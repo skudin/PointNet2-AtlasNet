@@ -6,6 +6,7 @@ import json
 from typing import Optional
 
 import numpy as np
+import pandas as pd
 import torch
 from torch.utils.data import DataLoader
 
@@ -13,6 +14,7 @@ import atlasnet2.libs.helpers as h
 from atlasnet2.datasets.shapenet_dataset import ShapeNetDataset
 from atlasnet2.networks.network import Network
 from atlasnet2.libs.helpers import AverageValueMeter
+from atlasnet2.libs.ply import write_ply
 
 import dist_chamfer
 import atlasnet2.configuration as conf
@@ -103,7 +105,7 @@ class NetworkWrapper:
 
         with torch.no_grad():
             for batch_num, batch_data in enumerate(self._test_data_loader, 1):
-                point_cloud, category = batch_data
+                point_cloud, category, name = batch_data
 
                 reconstructed_point_cloud = self._network.inference(point_cloud, self._num_points_gen)
 
@@ -117,6 +119,19 @@ class NetworkWrapper:
                     item_loss_value = (torch.mean(dist_1[index]) + torch.mean(dist_2[index])).item()
                     self._per_cat_test_loss[category[index]].update(item_loss_value)
 
+                    write_ply(filename=os.path.join(self._result_path, "%s_original.ply" % name[index]),
+                              points=pd.DataFrame(point_cloud[index].transpose(1, 0).data.squeeze().numpy()),
+                              as_text=True)
+
+                    b = np.zeros((len(self._faces), 4)) + 3
+                    b[:, 1:] = np.array(self._faces)
+                    write_ply(filename=os.path.join(self._result_path,
+                                                    "%s_reconstruction_%d_points" % (name[index], self._num_points_gen)),
+                              points=pd.DataFrame(
+                                  torch.cat((reconstructed_point_cloud[index].cpu().data.squeeze(), self._grid_pytorch),
+                                            1).numpy()),
+                              as_text=True, text=True, faces=pd.DataFrame(b.astype(int)))
+
                 logger.info(
                     "[%d/%d] test chamfer loss: %f " % (batch_num, len(self._test_data_loader), loss_value))
 
@@ -127,7 +142,7 @@ class NetworkWrapper:
         grain = int(np.sqrt(self._num_points_gen / self._num_primitives)) - 1.0
         logger.info("Grain: %f" % grain)
 
-        faces = []
+        self._faces = []
         vertices = []
         vertex_colors = []
         colors = h.get_colors(self._num_primitives)
@@ -143,22 +158,22 @@ class NetworkWrapper:
 
             for i in range(1, int(grain + 1)):
                 for j in range(0, (int(grain + 1) - 1)):
-                    faces.append([(grain + 1) * (grain + 1) * prim + j + (grain + 1) * i,
-                                  (grain + 1) * (grain + 1) * prim + j + (grain + 1) * i + 1,
-                                  (grain + 1) * (grain + 1) * prim + j + (grain + 1) * (i - 1)])
+                    self._faces.append([(grain + 1) * (grain + 1) * prim + j + (grain + 1) * i,
+                                        (grain + 1) * (grain + 1) * prim + j + (grain + 1) * i + 1,
+                                        (grain + 1) * (grain + 1) * prim + j + (grain + 1) * (i - 1)])
 
             for i in range(0, (int((grain + 1)) - 1)):
                 for j in range(1, int((grain + 1))):
-                    faces.append([(grain + 1) * (grain + 1) * prim + j + (grain + 1) * i,
-                                  (grain + 1) * (grain + 1) * prim + j + (grain + 1) * i - 1,
-                                  (grain + 1) * (grain + 1) * prim + j + (grain + 1) * (i + 1)])
+                    self._faces.append([(grain + 1) * (grain + 1) * prim + j + (grain + 1) * i,
+                                        (grain + 1) * (grain + 1) * prim + j + (grain + 1) * i - 1,
+                                        (grain + 1) * (grain + 1) * prim + j + (grain + 1) * (i + 1)])
 
         self._grid = [vertices for i in range(0, self._num_primitives)]
-        grid_pytorch = torch.Tensor(int(self._num_primitives * (grain + 1) * (grain + 1)), 2)
+        self._grid_pytorch = torch.Tensor(int(self._num_primitives * (grain + 1) * (grain + 1)), 2)
         for i in range(self._num_primitives):
             for j in range(int((grain + 1) * (grain + 1))):
-                grid_pytorch[int(j + (grain + 1) * (grain + 1) * i), 0] = vertices[j][0]
-                grid_pytorch[int(j + (grain + 1) * (grain + 1) * i), 1] = vertices[j][1]
+                self._grid_pytorch[int(j + (grain + 1) * (grain + 1) * i), 0] = vertices[j][0]
+                self._grid_pytorch[int(j + (grain + 1) * (grain + 1) * i), 1] = vertices[j][1]
 
         logger.info("Number vertices: %d" % (len(vertices) * self._num_primitives))
         logger.info("Regular grid generated.")
@@ -205,7 +220,7 @@ class NetworkWrapper:
         self._network.set_train_mode()
 
         for batch_num, batch_data in enumerate(self._train_data_loader, 1):
-            point_clouds, _ = batch_data
+            point_clouds, *_ = batch_data
 
             reconstructed_point_clouds = self._network.forward(point_clouds)
 
@@ -233,7 +248,7 @@ class NetworkWrapper:
 
         with torch.no_grad():
             for batch_num, batch_data in enumerate(self._test_data_loader, 1):
-                point_cloud, category = batch_data
+                point_cloud, category, *_ = batch_data
 
                 reconstructed_point_cloud = self._network.forward(point_cloud)
 
