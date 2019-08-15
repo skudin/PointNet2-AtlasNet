@@ -106,6 +106,8 @@ class NetworkWrapper:
         with torch.no_grad():
             for batch_num, batch_data in enumerate(self._test_data_loader, 1):
                 point_cloud, category, name = batch_data
+                category = category[0]
+                name = name[0]
 
                 reconstructed_point_cloud = self._network.inference(point_cloud, self._num_points_gen)
 
@@ -115,27 +117,29 @@ class NetworkWrapper:
                 loss_value = loss.item()
                 self._test_loss.update(loss_value)
 
-                for index in range(dist_1.shape[0]):
-                    item_loss_value = (torch.mean(dist_1[index]) + torch.mean(dist_2[index])).item()
-                    self._per_cat_test_loss[category[index]].update(item_loss_value)
+                self._per_cat_test_loss[category].update(loss_value)
 
-                    write_ply(filename=os.path.join(self._result_path, "%s_original.ply" % name[index]),
-                              points=pd.DataFrame(point_cloud[index].transpose(1, 0).data.squeeze().numpy()),
-                              as_text=True)
-
-                    b = np.zeros((len(self._faces), 4)) + 3
-                    b[:, 1:] = np.array(self._faces)
-                    write_ply(filename=os.path.join(self._result_path,
-                                                    "%s_reconstruction_%d_points" % (name[index], self._num_points_gen)),
-                              points=pd.DataFrame(
-                                  torch.cat((reconstructed_point_cloud[index].cpu().data.squeeze(), self._grid_pytorch),
-                                            1).numpy()),
-                              as_text=True, text=True, faces=pd.DataFrame(b.astype(int)))
+                self._write_3d_data(name, point_cloud, reconstructed_point_cloud)
 
                 logger.info(
                     "[%d/%d] test chamfer loss: %f " % (batch_num, len(self._test_data_loader), loss_value))
 
         self._print_test_stat()
+
+    def _write_3d_data(self, name, point_cloud, reconstructed_point_cloud):
+        write_ply(filename=os.path.join(self._result_path, "%s_input_point_cloud.ply" % name),
+                  points=pd.DataFrame(point_cloud.data.squeeze().numpy()), as_text=True)
+
+        write_ply(filename=os.path.join(self._result_path,
+                                        "%s_output_point_cloud_%d_points.ply" % (name, self._num_points_gen)),
+                  points=pd.DataFrame(reconstructed_point_cloud.cpu().data.squeeze().numpy()), as_text=True)
+
+        b = np.zeros((len(self._faces), 4)) + 3
+        b[:, 1:] = np.array(self._faces)
+        write_ply(filename=os.path.join(self._result_path, "%s_output_model_%d_points" % (name, self._num_points_gen)),
+                  points=pd.DataFrame(
+                      torch.cat((reconstructed_point_cloud.cpu().data.squeeze(), self._grid_pytorch), 1).numpy()),
+                  as_text=True, text=True, faces=pd.DataFrame(b.astype(int)))
 
     def _generate_regular_grid(self):
         logger.info("Generation of regular grid...")
