@@ -2,7 +2,7 @@ from setuptools import setup
 from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 
 setup(
-    name='chamfer',
+    name="pointnet2_",
     ext_modules=[
         CUDAExtension('chamfer', [
             'chamfer_cuda.cpp',
