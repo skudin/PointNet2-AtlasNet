@@ -15,7 +15,7 @@ class Autoencoder(nn.Module):
         if encoder_type == "pointnet":
             self._encoder = atlasnet.Encoder(num_points=num_points, bottleneck_size=bottleneck_size)
         else:
-            self._decoder = pointnet2.Encoder()
+            self._encoder = pointnet2.Encoder()
 
         self._decoder = atlasnet.Decoder(num_points=num_points, num_primitives=num_primitives,
                                          bottleneck_size=bottleneck_size)
