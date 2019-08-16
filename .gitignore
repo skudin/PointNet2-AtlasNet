@@ -211,3 +211,4 @@ dmypy.json
 # Custom.
 .idea
 !atlasnet2/scripts
+!packages/pointnet2_layers/include
