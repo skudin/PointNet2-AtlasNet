@@ -524,7 +524,7 @@ class PointnetSAModule(PointnetSAModuleMSG):
         )
 
 
-class Pointnet2Encoder(nn.Module):
+class Encoder(nn.Module):
     """
         PointNet2 with multi-scale grouping
         Classification network
