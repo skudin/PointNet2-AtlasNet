@@ -38,6 +38,11 @@ RUN cd /tmp/chamfer && \
     python3 setup.py build_ext --inplace && \
     pip3 install -e .
 
+COPY packages/pointnet2_ext /tmp/pointnet2_ext
+RUN cd /tmp/pointnet2_ext && \
+    python3 setup.py build_ext --inplace && \
+    pip3 install -e .
+
 # Create a working directory
 RUN mkdir /app
 WORKDIR /app
