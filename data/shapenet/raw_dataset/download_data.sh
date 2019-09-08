@@ -16,3 +16,5 @@ rm download
 wget https://cloud.enpc.fr/s/S6TCx1QJzviNHq0/download --no-check-certificate
 unzip download
 rm download
+
+cp --force fixed_model.ply customShapeNet/02958343/ply/e624da8cd22f6d289bc0c5b67eaafbc.points.ply
