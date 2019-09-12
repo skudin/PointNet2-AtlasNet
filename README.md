@@ -1,5 +1,16 @@
 # AtlasNet2
 
+## Результаты экспериментов
+
+| Метод | Chamfer |
+| ----- | ------- |
+| Autoencoder_Baseline (от автора) | 0.001963350556556298 |
+| Autoencoder_Atlasnet_25prim (от автора) | 0.0014476474650672833 |
+| Autoencoder_Atlasnet_1prim (воспроизедение) | 0.0018603184679336 |
+| Autoencoder_Atlasnet_25prim (воспроизедение) | 0.0014856810862457 |
+| Autoencoder_Atlasnet2_1prim | 0.0016481578493174 |
+| Autoencoder_Atlasnet2_25prim | 0.0014720115310883 |
+
 ## Постановка задачи
 
 Есть проект AtlasNet (https://github.com/ThibaultGROUEIX/AtlasNet), в нём на датасете ShapeNet делается автокодирование
