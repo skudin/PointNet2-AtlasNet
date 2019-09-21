@@ -5,6 +5,9 @@ import sys
 import random
 from typing import Union
 
+import numpy as np
+import torch
+
 import atlasnet2.configuration as conf
 
 
@@ -121,3 +124,9 @@ def get_random_color(pastel_factor=0.5):
 
 def color_distance(c1, c2):
     return sum([abs(x[0] - x[1]) for x in zip(c1, c2)])
+
+
+def set_random_seed():
+    random.seed(conf.RANDOM_SEED)
+    np.random.seed(conf.RANDOM_SEED)
+    torch.manual_seed(conf.RANDOM_SEED)
