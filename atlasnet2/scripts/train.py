@@ -19,7 +19,7 @@ def set_random_seed():
 
 
 def main():
-    settings = Settings("train")
+    settings = Settings("ae", "train")
 
     experiment_path, snapshots_path = h.create_folders_for_experiment(settings["experiment"])
 

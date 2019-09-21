@@ -7,17 +7,17 @@ import atlasnet2.libs.helpers as h
 
 
 class Settings:
-    def __init__(self, mode):
+    def __init__(self, settings_type, mode):
         self._common_params_filename = None
         self._training_params_filename = None
         self.snapshot = None
         self.experiment_folder = None
         self.num_points_gen = None
 
-        self._read_command_prompt_parser(mode)
+        self._read_command_prompt_parser(settings_type, mode)
         self._init_values()
 
-    def _read_command_prompt_parser(self, mode):
+    def _read_command_prompt_parser(self, settings_type, mode):
         parser = argparse.ArgumentParser()
 
         if mode == "train":
@@ -28,7 +28,9 @@ class Settings:
         else:
             parser.add_argument("-e", "--experiment", required=True, type=str, help="experiment name")
             parser.add_argument("-s", "--snapshot", required=True, choices=("latest", "best"), help="snapshot name")
-            parser.add_argument("-n", "--num_points_gen", type=int, help="number of points to generate")
+
+            if settings_type == "ae":
+                parser.add_argument("-n", "--num_points_gen", type=int, help="number of points to generate")
 
         args = parser.parse_args()
 
@@ -40,7 +42,9 @@ class Settings:
             self._common_params_filename = os.path.join(self.experiment_folder, "common.json")
             self._training_params_filename = os.path.join(self.experiment_folder, "training.json")
             self.snapshot = args.snapshot
-            self.num_points_gen = args.num_points_gen
+
+            if settings_type == "ae":
+                self.num_points_gen = args.num_points_gen
 
     def _init_values(self):
         common_params = self._parse_params_file(self._common_params_filename)

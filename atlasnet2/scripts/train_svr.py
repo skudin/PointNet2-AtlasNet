@@ -9,7 +9,7 @@ from atlasnet2.libs.network_wrapper import NetworkWrapper
 
 
 def main():
-    settings = Settings("train")
+    settings = Settings("svr", "train")
 
     experiment_path, snapshots_path = h.create_folders_for_experiment(settings["experiment"])
 
