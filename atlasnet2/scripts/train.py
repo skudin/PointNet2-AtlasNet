@@ -19,27 +19,16 @@ def set_random_seed():
 
 
 def main():
-    settings = Settings("train")
+    settings = Settings("ae", "train")
 
-    experiment_path, snapshots_path = h.create_folders_for_experiment(settings["experiment"])
+    experiment_path, snapshots_path, logger, vis = h.init_train(settings)
 
-    logger = h.set_logging(name="", logging_level=logging.DEBUG, logging_to_stdout=True,
-                           log_filename=os.path.join(experiment_path, "training.log"))
-
-    logger.info("Saving startup settings to the experiment folder.")
-    settings.save_settings(experiment_path)
-    logger.info("Done!")
-
-    vis = VisdomWrapper(server=settings["visdom_server"], port=settings["visdom_port"], env=settings["visdom_env"])
-
-    set_random_seed()
-    logger.info("Random seed %d." % conf.RANDOM_SEED)
-
-    network = NetworkWrapper(mode="train", vis=vis, dataset_path=settings["dataset"], snapshots_path=snapshots_path,
-                             num_epochs=settings["num_epochs"], batch_size=settings["batch_size"],
-                             num_workers=settings["num_workers"], encoder_type=settings["encoder_type"],
-                             num_points=settings["num_points"], num_primitives=settings["num_primitives"],
-                             bottleneck_size=settings["bottleneck_size"], learning_rate=settings["learning_rate"],
+    network = NetworkWrapper(svr=False, mode="train", vis=vis, dataset_path=settings["dataset"],
+                             snapshots_path=snapshots_path, num_epochs=settings["num_epochs"],
+                             batch_size=settings["batch_size"], num_workers=settings["num_workers"],
+                             encoder_type=settings["encoder_type"], num_points=settings["num_points"],
+                             num_primitives=settings["num_primitives"], bottleneck_size=settings["bottleneck_size"],
+                             learning_rate=settings["learning_rate"],
                              epoch_num_reset_optimizer=settings["epoch_num_reset_optimizer"],
                              multiplier_learning_rate=settings["multiplier_learning_rate"])
     network.train()

@@ -37,3 +37,7 @@ class VisdomWrapper:
                                   markersize=2,
                                   webgl=True
                               ))
+
+    def show_image(self, name: str, image: torch.Tensor):
+        if self._is_alive:
+            self._vis.image(image[0].data.cpu(), win=name, opts=dict(title=name))
