@@ -9,6 +9,7 @@ import numpy as np
 import torch
 
 import atlasnet2.configuration as conf
+from atlasnet2.libs.visdom_wrapper import VisdomWrapper
 
 
 def get_path_to_experiments_folder():
@@ -130,3 +131,22 @@ def set_random_seed():
     random.seed(conf.RANDOM_SEED)
     np.random.seed(conf.RANDOM_SEED)
     torch.manual_seed(conf.RANDOM_SEED)
+
+
+def init_train(settings):
+    experiment_path, snapshots_path = create_folders_for_experiment(settings["experiment"])
+
+    logger = set_logging(name="", logging_level=logging.DEBUG, logging_to_stdout=True,
+                         log_filename=os.path.join(experiment_path, "training.log"))
+
+    logger.info("Saving startup settings to the experiment folder.")
+    settings.save_settings(experiment_path)
+    logger.info("Done!")
+
+    vis = VisdomWrapper(server=settings["visdom_server"], port=settings["visdom_port"], env=settings["visdom_env"])
+
+    set_random_seed()
+    logger.info("Random seed %d." % conf.RANDOM_SEED)
+
+    return experiment_path, snapshots_path, logger, vis
+
