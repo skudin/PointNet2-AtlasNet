@@ -26,11 +26,8 @@ logger = logging.getLogger(__name__)
 
 class NetworkWrapper:
     def __init__(self, mode: str, dataset_path: str, snapshots_path: str, num_epochs: int,
-                 batch_size: int, num_workers: int, encoder_type: str, num_points: int, num_primitives: int,
-                 bottleneck_size: int, learning_rate: float, epoch_num_reset_optimizer: int,
-                 multiplier_learning_rate: float, vis: Optional[VisdomWrapper] = None,
-                 result_path: Optional[str] = None, snapshot: Optional[str] = None,
-                 num_points_gen: Optional[int] = None):
+                 batch_size: int, num_workers: int, learning_rate: float, vis: Optional[VisdomWrapper] = None,
+                 result_path: Optional[str] = None, snapshot: Optional[str] = None):
         self._mode = mode
         self._vis = vis
         self._dataset_path = dataset_path
@@ -38,17 +35,9 @@ class NetworkWrapper:
         self._num_epochs = num_epochs
         self._batch_size = batch_size
         self._num_workers = num_workers
-        self._num_points = num_points
-        self._num_primitives = num_primitives
         self._learning_rate = learning_rate
-        self._epoch_num_reset_optimizer = epoch_num_reset_optimizer
-        self._multiplier_learning_rate = multiplier_learning_rate
         self._result_path = result_path
         self._snapshot = snapshot
-
-        self._num_points_gen = num_points
-        if num_points_gen is not None:
-            self._num_points_gen = num_points_gen
 
         self._train_data_loader = self._get_data_loader("train")
         self._test_data_loader = self._get_data_loader("test")
