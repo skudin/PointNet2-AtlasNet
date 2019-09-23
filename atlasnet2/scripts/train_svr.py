@@ -8,9 +8,9 @@ def main():
 
     experiment_path, snapshots_path, logger, vis = h.init_train(settings)
 
-    network = SVRWrapper(mode="train", dataset_path=settings["dataset"], snapshots_path=snapshots_path,
+    network = SVRWrapper(mode="train", vis=vis, dataset_path=settings["dataset"], snapshots_path=snapshots_path,
                          num_epochs=settings["num_epochs"], batch_size=settings["batch_size"],
-                         num_workers=settings["num_workers"])
+                         num_workers=settings["num_workers"], learning_rate=settings["learning_rate"])
     network.train()
 
 

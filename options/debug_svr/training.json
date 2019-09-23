@@ -1,0 +1,7 @@
+{
+  "dataset": "/app/data/shapenet_tiny/dataset/",
+  "num_epochs": 9,
+  "batch_size": 32,
+  "num_workers": 2,
+  "learning_rate": 0.001
+}

@@ -24,7 +24,7 @@ from atlasnet2.libs.visdom_wrapper import VisdomWrapper
 logger = logging.getLogger(__name__)
 
 
-class NetworkWrapper:
+class SVRWrapper:
     def __init__(self, mode: str, dataset_path: str, snapshots_path: str, num_epochs: int,
                  batch_size: int, num_workers: int, learning_rate: float, vis: Optional[VisdomWrapper] = None,
                  result_path: Optional[str] = None, snapshot: Optional[str] = None):
