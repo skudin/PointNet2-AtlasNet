@@ -16,11 +16,12 @@ logger = logging.getLogger(__name__)
 
 class ShapeNetDataset(data.Dataset):
     def __init__(self, dataset_path: str = os.path.join(conf.BASE_PATH, "data", "shapenet", "dataset"),
-                 mode: str = "train", num_points: int = 2500, include_normals: bool = False):
+                 mode: str = "train", num_points: int = 2500, include_normals: bool = False, svr: bool = False):
         self._dataset_path = dataset_path
         self._mode = mode
         self._num_points = num_points
         self._include_normals = include_normals
+        self._svr = svr
 
         self._items = list()
 

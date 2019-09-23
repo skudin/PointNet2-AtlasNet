@@ -26,7 +26,8 @@ logger = logging.getLogger(__name__)
 
 class SVRWrapper:
     def __init__(self, mode: str, dataset_path: str, snapshots_path: str, num_epochs: int,
-                 batch_size: int, num_workers: int, learning_rate: float, vis: Optional[VisdomWrapper] = None,
+                 batch_size: int, num_workers: int, num_points: int, num_primitives: int,
+                 bottleneck_size: int, learning_rate: float, vis: Optional[VisdomWrapper] = None,
                  result_path: Optional[str] = None, snapshot: Optional[str] = None):
         self._mode = mode
         self._vis = vis
@@ -35,6 +36,8 @@ class SVRWrapper:
         self._num_epochs = num_epochs
         self._batch_size = batch_size
         self._num_workers = num_workers
+        self._num_points = num_points
+        self._num_primitives = num_primitives
         self._learning_rate = learning_rate
         self._result_path = result_path
         self._snapshot = snapshot
@@ -177,14 +180,16 @@ class SVRWrapper:
         if self._mode == "train":
             if dataset_part == "train":
                 return DataLoader(
-                    dataset=ShapeNetDataset(dataset_path=self._dataset_path, mode="train", num_points=self._num_points),
+                    dataset=ShapeNetDataset(dataset_path=self._dataset_path, mode="train", num_points=self._num_points,
+                                            svr=True),
                     batch_size=self._batch_size,
                     shuffle=True,
                     num_workers=self._num_workers
                 )
             else:
                 return DataLoader(
-                    dataset=ShapeNetDataset(dataset_path=self._dataset_path, mode="test", num_points=self._num_points),
+                    dataset=ShapeNetDataset(dataset_path=self._dataset_path, mode="test", num_points=self._num_points,
+                                            svr=True),
                     batch_size=self._batch_size,
                     shuffle=False,
                     num_workers=self._num_workers
@@ -192,7 +197,8 @@ class SVRWrapper:
         else:
             if dataset_part == "test":
                 return DataLoader(
-                    dataset=ShapeNetDataset(dataset_path=self._dataset_path, mode="test", num_points=self._num_points),
+                    dataset=ShapeNetDataset(dataset_path=self._dataset_path, mode="test", num_points=self._num_points,
+                                            svr=True),
                     batch_size=1,
                     shuffle=False,
                     num_workers=1

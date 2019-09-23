@@ -10,7 +10,9 @@ def main():
 
     network = SVRWrapper(mode="train", vis=vis, dataset_path=settings["dataset"], snapshots_path=snapshots_path,
                          num_epochs=settings["num_epochs"], batch_size=settings["batch_size"],
-                         num_workers=settings["num_workers"], learning_rate=settings["learning_rate"])
+                         num_workers=settings["num_workers"], num_points=settings["num_points"],
+                         num_primitives=settings["num_primitives"], bottleneck_size=settings["bottleneck_size"],
+                         learning_rate=settings["learning_rate"])
     network.train()
 
 
