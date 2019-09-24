@@ -180,57 +180,33 @@ class SVR(nn.Module):
         self._bottleneck_size = bottleneck_size
         self._num_primitives = num_primitives
         self._pretrained_encoder = pretrained_encoder
+
         self._encoder = models.resnet18(pretrained=self._pretrained_encoder, num_classes=1024)
-        self.__decoder = Decoder(num_points=self._num_points, num_primitives=self._num_primitives,
-                                 bottleneck_size=self._bottleneck_size)
+        self._decoder = Decoder(num_points=self._num_points, num_primitives=self._num_primitives,
+                                bottleneck_size=self._bottleneck_size)
+
     def forward(self, x):
-        x = x[:,:3,:,:].contiguous()
-        x = self.encoder(x)
-        outs = []
-        for i in range(0, self.nb_primitives):
-            rand_grid = Variable(torch.cuda.FloatTensor(x.size(0), 2, self.num_points//self.nb_primitives))
-            rand_grid.data.uniform_(0, 1)
-            y = x.unsqueeze(2).expand(x.size(0), x.size(1), rand_grid.size(2)).contiguous()
-            y = torch.cat( (rand_grid, y.type_as(rand_grid)), 1).contiguous()
-            outs.append(self.decoder[i](y))
-        return torch.cat(outs, 2).contiguous().transpose(2,1).contiguous()
+        x = x[:, : 3, :, :].contiguous()
 
-    def decode(self, x):
-        outs = []
-        for i in range(0, self.nb_primitives):
-            rand_grid = Variable(torch.cuda.FloatTensor(x.size(0), 2, self.num_points//self.nb_primitives))
-            rand_grid.data.uniform_(0, 1)
-            y = x.unsqueeze(2).expand(x.size(0), x.size(1), rand_grid.size(2)).contiguous()
-            y = torch.cat( (rand_grid, y.type_as(rand_grid)), 1).contiguous()
-            outs.append(self.decoder[i](y))
-        return torch.cat(outs, 2).contiguous().transpose(2,1).contiguous()
+        x = self._encoder(x)
 
-    def forward_inference(self, x, grid):
-        x = self.encoder(x)
+        return self._decoder(x)
+
+    def inference(self, x, grid):
+        x = self._encoder(x)
+
         outs = []
-        for i in range(0, self.nb_primitives):
+        for i in range(0, self._num_primitives):
             if self.usecuda:
-                rand_grid = Variable(torch.cuda.FloatTensor(grid[i]))
+                rand_grid = torch.cuda.FloatTensor(grid[i])
             else:
-                rand_grid = Variable(torch.FloatTensor(grid[i]))
+                rand_grid = torch.FloatTensor(grid[i])
 
             rand_grid = rand_grid.transpose(0, 1).contiguous().unsqueeze(0)
             rand_grid = rand_grid.expand(x.size(0), rand_grid.size(1), rand_grid.size(2)).contiguous()
-            # print(rand_grid.sizerand_grid())
-            y = x.unsqueeze(2).expand(x.size(0), x.size(1), rand_grid.size(2)).contiguous()
-            y = torch.cat( (rand_grid, y), 1).contiguous()
-            outs.append(self.decoder[i](y))
-        return torch.cat(outs, 2).contiguous().transpose(2,1).contiguous()
 
-    def forward_inference_from_latent_space(self, x, grid):
-        outs = []
-        for i in range(0, self.nb_primitives):
-            rand_grid = Variable(torch.cuda.FloatTensor(grid[i]))
-            rand_grid = rand_grid.transpose(0, 1).contiguous().unsqueeze(0)
-            rand_grid = rand_grid.expand(x.size(0), rand_grid.size(1), rand_grid.size(2)).contiguous()
-            # print(rand_grid.sizerand_grid())
             y = x.unsqueeze(2).expand(x.size(0), x.size(1), rand_grid.size(2)).contiguous()
-            y = torch.cat( (rand_grid, y), 1).contiguous()
-            outs.append(self.decoder[i](y))
-        return torch.cat(outs, 2).contiguous().transpose(2,1).contiguous()
+            y = torch.cat((rand_grid, y), 1).contiguous()
+            outs.append(self._decoder[i](y))
 
+        return torch.cat(outs, 2).contiguous().transpose(2,1).contiguous()
