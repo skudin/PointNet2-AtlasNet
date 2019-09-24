@@ -190,14 +190,16 @@ class NetworkWrapper:
         if self._mode == "train":
             if dataset_part == "train":
                 return DataLoader(
-                    dataset=ShapeNetDataset(dataset_path=self._dataset_path, mode="train", num_points=self._num_points),
+                    dataset=ShapeNetDataset(dataset_path=self._dataset_path, mode="train", num_points=self._num_points,
+                                            svr=self._svr),
                     batch_size=self._batch_size,
                     shuffle=True,
                     num_workers=self._num_workers
                 )
             else:
                 return DataLoader(
-                    dataset=ShapeNetDataset(dataset_path=self._dataset_path, mode="test", num_points=self._num_points),
+                    dataset=ShapeNetDataset(dataset_path=self._dataset_path, mode="test", num_points=self._num_points,
+                                            svr=self._svr),
                     batch_size=self._batch_size,
                     shuffle=False,
                     num_workers=self._num_workers
@@ -205,7 +207,8 @@ class NetworkWrapper:
         else:
             if dataset_part == "test":
                 return DataLoader(
-                    dataset=ShapeNetDataset(dataset_path=self._dataset_path, mode="test", num_points=self._num_points),
+                    dataset=ShapeNetDataset(dataset_path=self._dataset_path, mode="test", num_points=self._num_points,
+                                            svr=self._svr),
                     batch_size=1,
                     shuffle=False,
                     num_workers=1
