@@ -268,9 +268,14 @@ class NetworkWrapper:
 
         with torch.no_grad():
             for batch_num, batch_data in enumerate(self._test_data_loader, 1):
-                point_cloud, category, *_ = batch_data
+                if self._svr:
+                    image, point_cloud, category, *_ = batch_data
+                    network_input = image
+                else:
+                    point_cloud, category, *_ = batch_data
+                    network_input = point_cloud
 
-                reconstructed_point_cloud = self._network.forward(point_cloud)
+                reconstructed_point_cloud = self._network.forward(network_input)
 
                 dist_1, dist_2 = self._loss_func(point_cloud.cuda(), reconstructed_point_cloud)
                 loss = torch.mean(dist_1) + torch.mean(dist_2)
@@ -283,6 +288,9 @@ class NetworkWrapper:
                     self._per_cat_test_loss[category[index]].update(item_loss_value)
 
                 if batch_num % conf.VISDOM_UPDATE_FREQUENCY:
+                    if self._svr:
+                        self._vis.show_image("INPUT IMAGE TEST", image)
+
                     self._vis.show_point_cloud("REAL TEST", point_cloud)
                     self._vis.show_point_cloud("FAKE TEST", reconstructed_point_cloud)
 
