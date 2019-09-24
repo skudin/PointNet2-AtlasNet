@@ -13,9 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 class Network:
-    def __init__(self, svr: bool = False, encoder_type: str = "pointnet", num_points: int = 2500,
-                 num_primitives: int = 1,
-                 bottleneck_size: int = 1024, learning_rate: float = 0.001):
+    def __init__(self, svr: bool = False, encoder_type: str = "pointnet", pretrained_ae: Optional[str] = None,
+                 num_points: int = 2500, num_primitives: int = 1, bottleneck_size: int = 1024,
+                 learning_rate: float = 0.001):
         self._svr = svr
 
         if self._svr:
@@ -23,7 +23,16 @@ class Network:
         else:
             self._network = Autoencoder(encoder_type=encoder_type, num_points=num_points, num_primitives=num_primitives,
                                         bottleneck_size=bottleneck_size)
+
         self._network.apply(h.weights_init)
+
+        if self._svr and pretrained_ae is not None:
+            ae = Autoencoder(encoder_type=encoder_type, num_points=num_points, num_primitives=num_primitives,
+                             bottleneck_size=bottleneck_size)
+            ae.load_state_dict(torch.load(pretrained_ae))
+
+            self._network.decoder = ae.decoder
+
         self._network.cuda()
 
         self._optimizer = optim.Adam(self._network.parameters(), lr=learning_rate)

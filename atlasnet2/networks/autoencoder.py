@@ -30,3 +30,7 @@ class Autoencoder(nn.Module):
             x = self._encoder.forward(x)
 
             return self._decoder.inference(x, num_points)
+
+    @property
+    def decoder(self):
+        return self._decoder
