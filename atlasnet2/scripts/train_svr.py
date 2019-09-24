@@ -1,6 +1,5 @@
 import atlasnet2.libs.helpers as h
 from atlasnet2.libs.settings import Settings
-from atlasnet2.libs.svr_wrapper import SVRWrapper
 from atlasnet2.libs.network_wrapper import NetworkWrapper
 
 
