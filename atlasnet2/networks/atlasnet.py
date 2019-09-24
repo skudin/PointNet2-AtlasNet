@@ -147,22 +147,30 @@ class Decoder(nn.Module):
 
         return torch.cat(outs, 2).contiguous().transpose(2, 1).contiguous()
 
-    def inference(self, x, num_points=None):
+    def inference(self, x, num_points=None, grid=None):
         if num_points is None or num_points < 1:
             num_points = self._num_points
 
         outs = []
         for i in range(0, self._num_primitives):
-            num_points_in_primitive = num_points // self._num_primitives
-            outs.append(self._get_surface(x, i, num_points_in_primitive))
+            if grid is None:
+                num_points_in_primitive = num_points // self._num_primitives
+                outs.append(self._get_surface(x, i, num_points_in_primitive=num_points_in_primitive))
+            else:
+                outs.append(self._get_surface(x, i, grid=grid))
 
         return torch.cat(outs, 2).contiguous().transpose(2, 1).contiguous()
 
-    def _get_surface(self, x: torch.Tensor, num_primitive, num_points_in_primitive):
-        batch_size = x.size(0)
+    def _get_surface(self, x: torch.Tensor, num_primitive, num_points_in_primitive=None, grid=None):
+        if grid is None:
+            batch_size = x.size(0)
 
-        rand_grid = torch.cuda.FloatTensor(batch_size, 2, num_points_in_primitive)
-        rand_grid.data.uniform_(0, 1)
+            rand_grid = torch.cuda.FloatTensor(batch_size, 2, num_points_in_primitive)
+            rand_grid.data.uniform_(0, 1)
+        else:
+            rand_grid = torch.cuda.FloatTensor(grid[num_primitive])
+            rand_grid = rand_grid.transpose(0, 1).contiguous().unsqueeze(0)
+            rand_grid = rand_grid.expand(x.size(0), rand_grid.size(1), rand_grid.size(2)).contiguous()
 
         y = x.unsqueeze(2).expand(x.size(0), x.size(1), rand_grid.size(2)).contiguous()
         y = torch.cat((rand_grid, y), 1).contiguous()
@@ -195,18 +203,4 @@ class SVR(nn.Module):
     def inference(self, x, grid):
         x = self._encoder(x)
 
-        outs = []
-        for i in range(0, self._num_primitives):
-            if self.usecuda:
-                rand_grid = torch.cuda.FloatTensor(grid[i])
-            else:
-                rand_grid = torch.FloatTensor(grid[i])
-
-            rand_grid = rand_grid.transpose(0, 1).contiguous().unsqueeze(0)
-            rand_grid = rand_grid.expand(x.size(0), rand_grid.size(1), rand_grid.size(2)).contiguous()
-
-            y = x.unsqueeze(2).expand(x.size(0), x.size(1), rand_grid.size(2)).contiguous()
-            y = torch.cat((rand_grid, y), 1).contiguous()
-            outs.append(self._decoder[i](y))
-
-        return torch.cat(outs, 2).contiguous().transpose(2,1).contiguous()
+        return self._decoder.inference(x, grid=grid)
