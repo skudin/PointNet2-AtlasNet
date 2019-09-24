@@ -25,12 +25,14 @@ logger = logging.getLogger(__name__)
 
 
 class NetworkWrapper:
-    def __init__(self, mode: str, dataset_path: str, snapshots_path: str, num_epochs: int,
-                 batch_size: int, num_workers: int, encoder_type: str, num_points: int, num_primitives: int,
-                 bottleneck_size: int, learning_rate: float, epoch_num_reset_optimizer: int,
-                 multiplier_learning_rate: float, vis: Optional[VisdomWrapper] = None,
+    def __init__(self, svr: bool, mode: str, dataset_path: str, snapshots_path: str,
+                 vis: Optional[VisdomWrapper] = None, num_epochs: int = 1,
+                 batch_size: int = 1, num_workers: int = 1, encoder_type: str = "pointnet", num_points: int = 2500,
+                 num_primitives: int = 1, bottleneck_size: int = 1024, learning_rate: float = 0.001,
+                 epoch_num_reset_optimizer: int = 100, multiplier_learning_rate: float = 0.1,
                  result_path: Optional[str] = None, snapshot: Optional[str] = None,
                  num_points_gen: Optional[int] = None):
+        self._svr = svr
         self._mode = mode
         self._vis = vis
         self._dataset_path = dataset_path
