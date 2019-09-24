@@ -68,7 +68,7 @@ class ShapeNetDataset(data.Dataset):
                         os.path.isfile(os.path.join(renders_path, file_obj)) and file_obj.endswith(".png")])
 
             self._items.append(
-                Item(item_name, category, os.path.join(dataset_part_path, item_name, "point_cloud.npy", renders)))
+                Item(item_name, category, os.path.join(dataset_part_path, item_name, "point_cloud.npy"), renders))
 
     def _init_transforms(self):
         self._transforms = transforms.Compose([
