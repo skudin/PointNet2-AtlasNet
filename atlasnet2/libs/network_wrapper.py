@@ -57,7 +57,9 @@ class NetworkWrapper:
         self._categories = self._get_categories()
 
         if self._svr:
-            self._network = Network(svr=True)
+            self._network = Network(svr=True, encoder_type=encoder_type, num_points=self._num_points,
+                                    num_primitives=self._num_primitives, bottleneck_size=bottleneck_size,
+                                    learning_rate=learning_rate)
         else:
             self._network = Network(svr=False, encoder_type=encoder_type, num_points=self._num_points,
                                     num_primitives=self._num_primitives, bottleneck_size=bottleneck_size,
