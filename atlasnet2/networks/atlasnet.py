@@ -179,19 +179,13 @@ class Decoder(nn.Module):
 
 
 class SVR(nn.Module):
-    def __init__(self, num_points: int = 2500, bottleneck_size: int = 1024, num_primitives: int = 1,
-                 pretrained_encoder: bool = False, cuda: bool = True):
+    def __init__(self, num_points: int = 2500, num_primitives: int = 1, bottleneck_size: int = 1024,
+                 pretrained_encoder: bool = False):
         super().__init__()
 
-        self.usecuda = cuda
-        self._num_points = num_points
-        self._bottleneck_size = bottleneck_size
-        self._num_primitives = num_primitives
-        self._pretrained_encoder = pretrained_encoder
-
-        self._encoder = models.resnet18(pretrained=self._pretrained_encoder, num_classes=1024)
-        self._decoder = Decoder(num_points=self._num_points, num_primitives=self._num_primitives,
-                                bottleneck_size=self._bottleneck_size)
+        self._encoder = models.resnet18(pretrained=pretrained_encoder, num_classes=1024)
+        self._decoder = Decoder(num_points=num_points, num_primitives=num_primitives,
+                                bottleneck_size=bottleneck_size)
 
     def forward(self, x):
         x = x[:, : 3, :, :].contiguous()

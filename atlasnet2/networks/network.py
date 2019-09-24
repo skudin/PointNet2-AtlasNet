@@ -5,6 +5,7 @@ import torch
 import torch.optim as optim
 
 from atlasnet2.networks.autoencoder import Autoencoder
+from atlasnet2.networks.atlasnet import SVR
 import atlasnet2.libs.helpers as h
 
 
@@ -16,8 +17,12 @@ class Network:
                  num_primitives: int = 1,
                  bottleneck_size: int = 1024, learning_rate: float = 0.001):
         self._svr = svr
-        self._network = Autoencoder(encoder_type=encoder_type, num_points=num_points, num_primitives=num_primitives,
-                                    bottleneck_size=bottleneck_size)
+
+        if self._svr:
+            self._network = SVR(num_points=num_points, num_primitives=num_primitives, bottleneck_size=bottleneck_size)
+        else:
+            self._network = Autoencoder(encoder_type=encoder_type, num_points=num_points, num_primitives=num_primitives,
+                                        bottleneck_size=bottleneck_size)
         self._network.apply(h.weights_init)
         self._network.cuda()
 
