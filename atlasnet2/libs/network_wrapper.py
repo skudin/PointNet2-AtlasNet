@@ -56,9 +56,12 @@ class NetworkWrapper:
         self._test_data_loader = self._get_data_loader("test")
         self._categories = self._get_categories()
 
-        self._network = Network(encoder_type=encoder_type, num_points=self._num_points,
-                                num_primitives=self._num_primitives, bottleneck_size=bottleneck_size,
-                                learning_rate=learning_rate)
+        if self._svr:
+            self._network = Network(svr=True)
+        else:
+            self._network = Network(svr=False, encoder_type=encoder_type, num_points=self._num_points,
+                                    num_primitives=self._num_primitives, bottleneck_size=bottleneck_size,
+                                    learning_rate=learning_rate)
 
         self._loss_func = dist_chamfer.chamferDist()
 
@@ -190,16 +193,16 @@ class NetworkWrapper:
         if self._mode == "train":
             if dataset_part == "train":
                 return DataLoader(
-                    dataset=ShapeNetDataset(dataset_path=self._dataset_path, mode="train", num_points=self._num_points,
-                                            svr=self._svr),
+                    dataset=ShapeNetDataset(svr=self._svr, dataset_path=self._dataset_path, mode="train",
+                                            num_points=self._num_points),
                     batch_size=self._batch_size,
                     shuffle=True,
                     num_workers=self._num_workers
                 )
             else:
                 return DataLoader(
-                    dataset=ShapeNetDataset(dataset_path=self._dataset_path, mode="test", num_points=self._num_points,
-                                            svr=self._svr),
+                    dataset=ShapeNetDataset(svr=self._svr, dataset_path=self._dataset_path, mode="test",
+                                            num_points=self._num_points),
                     batch_size=self._batch_size,
                     shuffle=False,
                     num_workers=self._num_workers
@@ -207,8 +210,8 @@ class NetworkWrapper:
         else:
             if dataset_part == "test":
                 return DataLoader(
-                    dataset=ShapeNetDataset(dataset_path=self._dataset_path, mode="test", num_points=self._num_points,
-                                            svr=self._svr),
+                    dataset=ShapeNetDataset(svr=self._svr, dataset_path=self._dataset_path, mode="test",
+                                            num_points=self._num_points),
                     batch_size=1,
                     shuffle=False,
                     num_workers=1

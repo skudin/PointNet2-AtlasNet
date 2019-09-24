@@ -12,8 +12,10 @@ logger = logging.getLogger(__name__)
 
 
 class Network:
-    def __init__(self, encoder_type: str = "pointnet", num_points: int = 2500, num_primitives: int = 1,
-                 bottleneck_size=1024, learning_rate: float = 0.001):
+    def __init__(self, svr: bool = False, encoder_type: str = "pointnet", num_points: int = 2500,
+                 num_primitives: int = 1,
+                 bottleneck_size: int = 1024, learning_rate: float = 0.001):
+        self._svr = svr
         self._network = Autoencoder(encoder_type=encoder_type, num_points=num_points, num_primitives=num_primitives,
                                     bottleneck_size=bottleneck_size)
         self._network.apply(h.weights_init)
