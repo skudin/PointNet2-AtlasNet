@@ -249,6 +249,9 @@ class NetworkWrapper:
             self._train_loss.update(loss_value)
 
             if batch_num % conf.VISDOM_UPDATE_FREQUENCY:
+                if self._svr:
+                    self._vis.show_image("INPUT IMAGE TRAIN", image)
+
                 self._vis.show_point_cloud("REAL TRAIN", point_clouds)
                 self._vis.show_point_cloud("FAKE TRAIN", reconstructed_point_clouds)
 
