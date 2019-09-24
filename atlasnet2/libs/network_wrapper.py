@@ -232,9 +232,14 @@ class NetworkWrapper:
         self._network.set_train_mode()
 
         for batch_num, batch_data in enumerate(self._train_data_loader, 1):
-            point_clouds, *_ = batch_data
+            if self._svr:
+                image, point_clouds, *_ = batch_data
+                network_input = image
+            else:
+                point_clouds, *_ = batch_data
+                network_input = point_clouds
 
-            reconstructed_point_clouds = self._network.forward(point_clouds)
+            reconstructed_point_clouds = self._network.forward(network_input)
 
             dist_1, dist_2 = self._loss_func(point_clouds.cuda(), reconstructed_point_clouds)
             loss = torch.mean(dist_1) + torch.mean(dist_2)
