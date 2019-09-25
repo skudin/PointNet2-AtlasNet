@@ -17,6 +17,7 @@ class Network:
                  num_points: int = 2500, num_primitives: int = 1, bottleneck_size: int = 1024,
                  learning_rate: float = 0.001):
         self._svr = svr
+        self._pretrained_ae = pretrained_ae
 
         if self._svr:
             self._network = SVR(num_points=num_points, num_primitives=num_primitives, bottleneck_size=bottleneck_size)
@@ -26,16 +27,21 @@ class Network:
 
         self._network.apply(h.weights_init)
 
-        if self._svr and pretrained_ae is not None:
+        if self._svr and self._pretrained_ae is not None:
             ae = Autoencoder(encoder_type=encoder_type, num_points=num_points, num_primitives=num_primitives,
                              bottleneck_size=bottleneck_size)
-            ae.load_state_dict(torch.load(pretrained_ae))
+            ae.load_state_dict(torch.load(self._pretrained_ae))
 
             self._network.decoder = ae.decoder
 
         self._network.cuda()
 
-        self._optimizer = optim.Adam(self._network.parameters(), lr=learning_rate)
+        if self._svr and self._pretrained_ae is not None:
+            params = self._network.encoder.parameters()
+        else:
+            params = self._network.parameters()
+
+        self._optimizer = optim.Adam(params, lr=learning_rate)
 
         logger.info("Network architecture:")
         logger.info(str(self._network))
@@ -65,7 +71,12 @@ class Network:
         self._network.eval()
 
     def reset_optimizer(self, learning_rate):
-        self._optimizer = optim.Adam(self._network.parameters(), lr=learning_rate)
+        if self._svr and self._pretrained_ae is not None:
+            params = self._network.encoder.parameters()
+        else:
+            params = self._network.parameters()
+
+        self._optimizer = optim.Adam(params, lr=learning_rate)
 
     def save_snapshot(self, path: str):
         torch.save(self._network.state_dict(), path)

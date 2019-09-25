@@ -4,6 +4,7 @@
   "batch_size": 16,
   "num_workers": 2,
   "encoder_type": "pointnet",
+  "pretrained_ae": null,
   "num_points": 2500,
   "num_primitives": 1,
   "bottleneck_size": 1024,
