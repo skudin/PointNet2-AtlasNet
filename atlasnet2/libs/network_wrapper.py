@@ -56,6 +56,9 @@ class NetworkWrapper:
 
         self._train_data_loader = self._get_data_loader("train")
         self._test_data_loader = self._get_data_loader("test")
+        if self._svr:
+            self._test_view_data_loader = self._get_data_loader("train", gen_view=True)
+
         self._categories = self._get_categories()
 
         if self._svr:
@@ -72,7 +75,11 @@ class NetworkWrapper:
 
         self._train_loss = AverageValueMeter()
         self._test_loss = AverageValueMeter()
+        if self._svr:
+            self._test_view_loss = AverageValueMeter()
+
         self._per_cat_test_loss = {key: AverageValueMeter() for key in self._categories}
+
         self._best_loss = 1e6
         self._best_per_cat_test_loss = None
 
@@ -192,14 +199,14 @@ class NetworkWrapper:
         logger.info("Number vertices: %d" % (len(vertices) * self._num_primitives))
         logger.info("Regular grid generated.")
 
-    def _get_data_loader(self, dataset_part: str = "test"):
+    def _get_data_loader(self, dataset_part: str = "test", gen_view: bool = False):
         logger.info("\nInitializing data loader. Mode: %s, dataset part: %s.\n" % (self._mode, dataset_part))
 
         if self._mode == "train":
             if dataset_part == "train":
                 return DataLoader(
                     dataset=ShapeNetDataset(svr=self._svr, dataset_path=self._dataset_path, mode="train",
-                                            num_points=self._num_points),
+                                            num_points=self._num_points, gen_view=gen_view),
                     batch_size=self._batch_size,
                     shuffle=True,
                     num_workers=self._num_workers
@@ -207,7 +214,7 @@ class NetworkWrapper:
             else:
                 return DataLoader(
                     dataset=ShapeNetDataset(svr=self._svr, dataset_path=self._dataset_path, mode="test",
-                                            num_points=self._num_points),
+                                            num_points=self._num_points, fixed_render_num=0),
                     batch_size=self._batch_size,
                     shuffle=False,
                     num_workers=self._num_workers
@@ -272,6 +279,28 @@ class NetworkWrapper:
         self._network.set_test_mode()
 
         with torch.no_grad():
+            if self._svr:
+                self._test_view_loss.reset()
+
+                for batch_num, batch_data in enumerate(self._test_view_data_loader, 1):
+                    image, point_cloud, *_ = batch_data
+
+                    reconstructed_point_cloud = self._network.forward(image)
+
+                    dist_1, dist_2 = self._loss_func(point_cloud.cuda(), reconstructed_point_cloud)
+                    loss = torch.mean(dist_1) + torch.mean(dist_2)
+
+                    loss_value = loss.item()
+                    self._test_view_loss.update(loss_value)
+
+                    logger.info(
+                        "[%d: %d/%d] test view chamfer loss: %f " % (
+                            epoch, batch_num, len(self._test_view_data_loader), loss_value))
+
+                self._vis.append_point_to_curve("Chamfer loss", "test view", epoch, self._test_view_loss.avg)
+                self._vis.append_point_to_curve("Chamfer log loss", "test view", epoch,
+                                                np.log(self._test_view_loss.avg))
+
             for batch_num, batch_data in enumerate(self._test_data_loader, 1):
                 if self._svr:
                     image, point_cloud, category, *_ = batch_data
