@@ -357,6 +357,8 @@ class NetworkWrapper:
     def _print_epoch_stat(self, epoch):
         logger.info("\nEpoch %d stat:" % epoch)
         logger.info("\tTrain loss: %f" % self._train_loss.avg)
+        if self._svr:
+            logger.info("\tTest view loss: %f" % self._test_view_loss.avg)
         logger.info("\tTest loss: %f" % self._test_loss.avg)
         logger.info("\tPer cat test loss: " + ", ".join(
             ["%s: %.16f" % (key, self._per_cat_test_loss[key].avg) for key in self._per_cat_test_loss]))
