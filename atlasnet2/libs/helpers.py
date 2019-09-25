@@ -136,7 +136,7 @@ def set_random_seed():
 def init_train(settings):
     experiment_path, snapshots_path = create_folders_for_experiment(settings["experiment"])
 
-    logger = set_logging(name="", logging_level=logging.DEBUG, logging_to_stdout=True,
+    logger = set_logging(name="", logging_level=logging.INFO, logging_to_stdout=True,
                          log_filename=os.path.join(experiment_path, "training.log"))
 
     logger.info("Saving startup settings to the experiment folder.")
