@@ -34,6 +34,9 @@ class Network:
 
             self._network.decoder = ae.decoder
 
+            del ae
+            pass
+
         self._network.cuda()
 
         if self._svr and self._pretrained_ae is not None:
@@ -49,7 +52,8 @@ class Network:
     def forward(self, tensor: torch.Tensor):
         self._optimizer.zero_grad()
 
-        tensor = tensor.transpose(2, 1).contiguous()
+        if not self._svr:
+            tensor = tensor.transpose(2, 1).contiguous()
         tensor = tensor.cuda()
 
         return self._network(tensor)
