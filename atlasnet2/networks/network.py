@@ -59,7 +59,8 @@ class Network:
         return self._network(tensor)
 
     def inference(self, tensor: torch.Tensor, num_points: Optional[int] = None):
-        tensor = tensor.transpose(2, 1).contiguous()
+        if not self._svr:
+            tensor = tensor.transpose(2, 1).contiguous()
         tensor = tensor.cuda()
 
         return self._network.inference(tensor, num_points)
