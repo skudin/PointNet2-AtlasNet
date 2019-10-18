@@ -11,7 +11,7 @@ import torch
 from torch.utils.data import DataLoader
 
 import atlasnet2.libs.helpers as h
-from atlasnet2.datasets.dataset import ShapeNetDataset
+from atlasnet2.datasets.dataset import Dataset
 from atlasnet2.networks.network import Network
 from atlasnet2.libs.helpers import AverageValueMeter
 from atlasnet2.libs.ply import write_ply
@@ -205,16 +205,16 @@ class NetworkWrapper:
         if self._mode == "train":
             if dataset_part == "train":
                 return DataLoader(
-                    dataset=ShapeNetDataset(svr=self._svr, dataset_path=self._dataset_path, mode="train",
-                                            num_points=self._num_points, gen_view=gen_view),
+                    dataset=Dataset(svr=self._svr, dataset_path=self._dataset_path, mode="train",
+                                    num_points=self._num_points, gen_view=gen_view),
                     batch_size=self._batch_size,
                     shuffle=True,
                     num_workers=self._num_workers
                 )
             else:
                 return DataLoader(
-                    dataset=ShapeNetDataset(svr=self._svr, dataset_path=self._dataset_path, mode="test",
-                                            num_points=self._num_points, fixed_render_num=0),
+                    dataset=Dataset(svr=self._svr, dataset_path=self._dataset_path, mode="test",
+                                    num_points=self._num_points, fixed_render_num=0),
                     batch_size=self._batch_size,
                     shuffle=False,
                     num_workers=self._num_workers
@@ -222,8 +222,8 @@ class NetworkWrapper:
         else:
             if dataset_part == "test":
                 return DataLoader(
-                    dataset=ShapeNetDataset(svr=self._svr, dataset_path=self._dataset_path, mode="test",
-                                            num_points=self._num_points),
+                    dataset=Dataset(svr=self._svr, dataset_path=self._dataset_path, mode="test",
+                                    num_points=self._num_points),
                     batch_size=1,
                     shuffle=False,
                     num_workers=1

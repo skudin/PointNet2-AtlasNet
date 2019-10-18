@@ -17,7 +17,7 @@ import atlasnet2.configuration as conf
 logger = logging.getLogger(__name__)
 
 
-class ShapeNetDataset(data.Dataset):
+class Dataset(data.Dataset):
     def __init__(self, svr: bool = False,
                  dataset_path: str = os.path.join(conf.BASE_PATH, "data", "shapenet_tiny", "dataset"),
                  mode: str = "train", num_points: int = 2500, include_normals: bool = False, gen_view: bool = False,
@@ -113,6 +113,6 @@ class ShapeNetDataset(data.Dataset):
 
 
 if __name__ == "__main__":
-    dataset = ShapeNetDataset(svr=True)
+    dataset = Dataset(svr=True)
     tmp = dataset[0]
     pass
