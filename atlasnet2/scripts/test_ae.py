@@ -7,7 +7,7 @@ from atlasnet2.libs.network_wrapper import NetworkWrapper
 
 
 def main():
-    settings = Settings("test")
+    settings = Settings("ae", "test")
 
     result_path = os.path.join(settings.experiment_folder, "results", "%s" % settings.snapshot)
     snapshots_path = os.path.join(settings.experiment_folder, "snapshots")
@@ -17,7 +17,7 @@ def main():
     logger = h.set_logging("", logging_level=logging.DEBUG, logging_to_stdout=True,
                            log_filename=os.path.join(result_path, "testing.log"))
 
-    network = NetworkWrapper(mode="test", dataset_path=settings["dataset"], snapshots_path=snapshots_path,
+    network = NetworkWrapper(svr=False, mode="test", dataset_path=settings["dataset"], snapshots_path=snapshots_path,
                              num_epochs=settings["num_epochs"], batch_size=settings["batch_size"],
                              num_workers=settings["num_workers"], encoder_type=settings["encoder_type"],
                              num_points=settings["num_points"], num_primitives=settings["num_primitives"],
