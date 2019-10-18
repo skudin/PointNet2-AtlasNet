@@ -46,7 +46,7 @@ class Dataset(data.Dataset):
 
         raw_point_cloud = np.load(item.point_cloud, allow_pickle=False)
 
-        if not self._include_normals:
+        if not self._include_normals and raw_point_cloud.shape[1] > 3:
             raw_point_cloud = raw_point_cloud[:, 0: 3]
 
         point_cloud = raw_point_cloud[np.random.choice(raw_point_cloud.shape[0], self._num_points, replace=False), :]
