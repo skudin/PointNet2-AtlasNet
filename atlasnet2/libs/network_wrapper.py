@@ -11,7 +11,7 @@ import torch
 from torch.utils.data import DataLoader
 
 import atlasnet2.libs.helpers as h
-from atlasnet2.datasets.shapenet_dataset import ShapeNetDataset
+from atlasnet2.datasets.dataset import ShapeNetDataset
 from atlasnet2.networks.network import Network
 from atlasnet2.libs.helpers import AverageValueMeter
 from atlasnet2.libs.ply import write_ply
