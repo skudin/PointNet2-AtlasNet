@@ -17,7 +17,7 @@ import atlasnet2.configuration as conf
 logger = logging.getLogger(__name__)
 
 
-class ShapeNetDataset(data.Dataset):
+class Dataset(data.Dataset):
     def __init__(self, svr: bool = False,
                  dataset_path: str = os.path.join(conf.BASE_PATH, "data", "shapenet_tiny", "dataset"),
                  mode: str = "train", num_points: int = 2500, include_normals: bool = False, gen_view: bool = False,
@@ -46,7 +46,7 @@ class ShapeNetDataset(data.Dataset):
 
         raw_point_cloud = np.load(item.point_cloud, allow_pickle=False)
 
-        if not self._include_normals:
+        if not self._include_normals and raw_point_cloud.shape[1] > 3:
             raw_point_cloud = raw_point_cloud[:, 0: 3]
 
         point_cloud = raw_point_cloud[np.random.choice(raw_point_cloud.shape[0], self._num_points, replace=False), :]
@@ -113,6 +113,6 @@ class ShapeNetDataset(data.Dataset):
 
 
 if __name__ == "__main__":
-    dataset = ShapeNetDataset(svr=True)
+    dataset = Dataset(svr=True)
     tmp = dataset[0]
     pass

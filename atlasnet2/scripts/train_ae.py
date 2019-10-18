@@ -1,5 +1,3 @@
-import logging
-import os
 import random
 
 import numpy as np
@@ -8,7 +6,6 @@ import torch
 import atlasnet2.configuration as conf
 import atlasnet2.libs.helpers as h
 from atlasnet2.libs.settings import Settings
-from atlasnet2.libs.visdom_wrapper import VisdomWrapper
 from atlasnet2.libs.network_wrapper import NetworkWrapper
 
 
