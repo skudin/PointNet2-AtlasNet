@@ -1,0 +1,6 @@
+{
+  "experiment": "crowns_atlasnet_3_primitives_3600_points",
+  "visdom_server": "http://localhost",
+  "visdom_port": 8097,
+  "visdom_env": null
+}
