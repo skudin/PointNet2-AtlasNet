@@ -55,6 +55,10 @@ class Settings:
         if self._settings["visdom_env"] is None:
             self._settings["visdom_env"] = self._settings["experiment"]
 
+        if isinstance(self._settings["epoch_num_reset_optimizer"], int):
+            self._settings["epoch_num_reset_optimizer"] = (self._settings["epoch_num_reset_optimizer"], )
+            self._settings["multiplier_learning_rate"] = (self._settings["multiplier_learning_rate"], )
+
     def __getitem__(self, key: str):
         return self._settings[key]
 

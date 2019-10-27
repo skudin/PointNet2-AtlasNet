@@ -4,7 +4,7 @@
   "batch_size": 32,
   "num_workers": 2,
   "encoder_type": "pointnet",
-  "num_points": 2500,
+  "num_points": 3600,
   "num_primitives": 1,
   "bottleneck_size": 1024,
   "learning_rate": 0.001,

@@ -1,0 +1,6 @@
+{
+  "experiment": "36_wax_ups_global_norm_pointnet2_atlasnet_2500_points_ae_3_primitives_multiple_resetting_lr",
+  "visdom_server": "http://kudin-stepan-hpc",
+  "visdom_port": 8097,
+  "visdom_env": null
+}
