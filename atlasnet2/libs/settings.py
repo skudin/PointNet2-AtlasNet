@@ -59,8 +59,6 @@ class Settings:
             self._settings["epoch_num_reset_optimizer"] = (self._settings["epoch_num_reset_optimizer"], )
             self._settings["multiplier_learning_rate"] = (self._settings["multiplier_learning_rate"], )
 
-        pass
-
     def __getitem__(self, key: str):
         return self._settings[key]
 

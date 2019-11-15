@@ -92,11 +92,14 @@ class NetworkWrapper:
     def train(self):
         logger.info("Training started!")
 
+        reset_index = 0
+
         for epoch in range(self._num_epochs):
-            if epoch == self._epoch_num_reset_optimizer:
-                new_learning_rate = self._learning_rate * self._multiplier_learning_rate
-                logger.info("Reset optimizer! New learning rate is %.16f." % new_learning_rate)
-                self._network.reset_optimizer(new_learning_rate)
+            if epoch == self._epoch_num_reset_optimizer[reset_index]:
+                self._learning_rate *= self._multiplier_learning_rate[reset_index]
+                reset_index = reset_index + 1 if reset_index < len(self._epoch_num_reset_optimizer) - 1 else reset_index
+                logger.info("Reset optimizer! New learning rate is %.16f." % self._learning_rate)
+                self._network.reset_optimizer(self._learning_rate)
 
             start_time = time.time()
 
