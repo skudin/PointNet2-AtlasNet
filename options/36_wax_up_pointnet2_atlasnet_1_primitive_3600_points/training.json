@@ -1,5 +1,5 @@
 {
-  "dataset": "/app/data/crowns/",
+  "dataset": "/app/data/36_wax_up/",
   "num_epochs": 400,
   "batch_size": 20,
   "num_workers": 2,
