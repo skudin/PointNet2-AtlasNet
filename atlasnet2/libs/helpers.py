@@ -143,7 +143,8 @@ def init_train(settings):
     settings.save_settings(experiment_path)
     logger.info("Done!")
 
-    vis = VisdomWrapper(server=settings["visdom_server"], port=settings["visdom_port"], env=settings["visdom_env"])
+    vis = VisdomWrapper(server=settings["visdom_server"], port=settings["visdom_port"], env=settings["visdom_env"],
+                        output_filename=os.path.join(experiment_path, "graphs.json"))
 
     set_random_seed()
     logger.info("Random seed %d." % conf.RANDOM_SEED)
