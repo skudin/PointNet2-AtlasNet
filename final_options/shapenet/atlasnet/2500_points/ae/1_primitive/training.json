@@ -1,6 +1,6 @@
 {
   "dataset": "/app/data/shapenet/dataset/",
-  "num_epochs": 120,
+  "num_epochs": 400,
   "batch_size": 32,
   "num_workers": 2,
   "encoder_type": "pointnet",
@@ -8,6 +8,6 @@
   "num_primitives": 1,
   "bottleneck_size": 1024,
   "learning_rate": 0.001,
-  "epoch_num_reset_optimizer": 100,
+  "epoch_num_reset_optimizer": 200,
   "multiplier_learning_rate": 0.1
 }
