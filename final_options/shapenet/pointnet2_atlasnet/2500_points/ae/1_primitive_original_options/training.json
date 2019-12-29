@@ -1,6 +1,6 @@
 {
   "dataset": "/app/data/shapenet/dataset/",
-  "num_epochs": 120,
+  "num_epochs": 200,
   "batch_size": 22,
   "num_workers": 2,
   "encoder_type": "pointnet2",
