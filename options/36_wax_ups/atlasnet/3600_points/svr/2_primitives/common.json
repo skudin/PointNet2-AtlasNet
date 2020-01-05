@@ -1,0 +1,6 @@
+{
+  "experiment": "36_wax_ups_atlasnet_3600_points_svr_2_primitives",
+  "visdom_server": "http://kudin-stepan-hpc",
+  "visdom_port": 8097,
+  "visdom_env": null
+}
