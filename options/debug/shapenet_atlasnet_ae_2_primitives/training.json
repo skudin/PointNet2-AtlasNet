@@ -1,5 +1,5 @@
 {
-  "dataset": "/app/data/shapenet_tiny",
+  "dataset": "/app/data/shapenet_tiny/",
   "num_epochs": 10,
   "batch_size": 32,
   "num_workers": 2,
