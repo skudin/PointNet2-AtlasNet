@@ -1,0 +1,6 @@
+{
+  "experiment": "debug_shapenet_atlasnet_ae_2_primitives",
+  "visdom_server": "http://localhost",
+  "visdom_port": 8097,
+  "visdom_env": null
+}

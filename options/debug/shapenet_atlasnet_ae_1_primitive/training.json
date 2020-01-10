@@ -1,0 +1,13 @@
+{
+  "dataset": "/app/data/shapenet/shapenet_tiny/",
+  "num_epochs": 10,
+  "batch_size": 32,
+  "num_workers": 2,
+  "encoder_type": "pointnet",
+  "num_points": 2500,
+  "num_primitives": 1,
+  "bottleneck_size": 1024,
+  "learning_rate": 0.001,
+  "epoch_num_reset_optimizer": 5,
+  "multiplier_learning_rate": 0.1
+}

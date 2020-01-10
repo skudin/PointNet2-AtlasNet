@@ -154,13 +154,6 @@ class NetworkWrapper:
                                         "%s_output_point_cloud_%d_points.ply" % (name, self._num_points_gen)),
                   points=pd.DataFrame(reconstructed_point_cloud.cpu().data.squeeze().numpy()), as_text=True)
 
-        b = np.zeros((len(self._faces), 4)) + 3
-        b[:, 1:] = np.array(self._faces)
-        write_ply(filename=os.path.join(self._result_path, "%s_output_model_%d_points" % (name, self._num_points_gen)),
-                  points=pd.DataFrame(
-                      torch.cat((reconstructed_point_cloud.cpu().data.squeeze(), self._grid_pytorch), 1).numpy()),
-                  as_text=True, text=True, faces=pd.DataFrame(b.astype(int)))
-
     def _generate_regular_grid(self):
         logger.info("Generation of regular grid...")
         grain = int(np.sqrt(self._num_points_gen / self._num_primitives)) - 1.0
