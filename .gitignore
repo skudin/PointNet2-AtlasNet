@@ -213,3 +213,4 @@ dmypy.json
 !atlasnet2/scripts
 !packages/pointnet2_ext/include
 /.project
+data/shapenet/shapenet_tiny
