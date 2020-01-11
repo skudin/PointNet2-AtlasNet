@@ -1,4 +1,4 @@
-visdom == 0.1.8.8
-plyfile == 0.7
-pillow
+visdom==0.1.8.8
+plyfile==0.7
+pillow==6.1.0
 pandas
