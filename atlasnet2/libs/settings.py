@@ -13,6 +13,8 @@ class Settings:
         self.snapshot = None
         self.experiment_folder = None
         self.num_points_gen = None
+        self.input = None
+        self.output = None
 
         self._read_command_prompt_parser(settings_type, mode)
         self._init_values()
@@ -28,6 +30,8 @@ class Settings:
         else:
             parser.add_argument("-e", "--experiment", required=True, type=str, help="experiment name")
             parser.add_argument("-s", "--snapshot", required=True, choices=("latest", "best"), help="snapshot name")
+            parser.add_argument("-i", "--input", required=True, type=str, help="input data for inference")
+            parser.add_argument("-o", "--output", required=True, type=str, help="output folder")
 
             if settings_type == "ae":
                 parser.add_argument("-n", "--num_points_gen", type=int, help="number of points to generate")
@@ -42,6 +46,8 @@ class Settings:
             self._common_params_filename = os.path.join(self.experiment_folder, "common.json")
             self._training_params_filename = os.path.join(self.experiment_folder, "training.json")
             self.snapshot = args.snapshot
+            self.input = args.input
+            self.output = args.output
 
             if settings_type == "ae":
                 self.num_points_gen = args.num_points_gen
@@ -65,6 +71,7 @@ class Settings:
     def save_settings(self, path):
         shutil.copy(self._common_params_filename, os.path.join(path, "common.json"))
         shutil.copy(self._training_params_filename, os.path.join(path, "training.json"))
+        shutil.copy(os.path.join(self._settings["dataset"], "categories.json"), os.path.join(path, "categories.json"))
 
     @staticmethod
     def _parse_params_file(filename):

@@ -215,3 +215,4 @@ dmypy.json
 /.project
 data/shapenet/shapenet_tiny
 experiments
+data/tmp

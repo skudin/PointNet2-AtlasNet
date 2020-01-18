@@ -20,10 +20,11 @@ logger = logging.getLogger(__name__)
 class Dataset(data.Dataset):
     def __init__(self, svr: bool = False,
                  dataset_path: str = os.path.join(conf.BASE_PATH, "data", "shapenet_tiny", "dataset"),
-                 mode: str = "train", num_points: int = 2500, include_normals: bool = False, gen_view: bool = False,
+                 run_type: str = "train", mode: str = "train", num_points: int = 2500, include_normals: bool = False, gen_view: bool = False,
                  fixed_render_num: Optional[int] = None):
         self._svr = svr
         self._dataset_path = dataset_path
+        self._run_type = run_type
         self._mode = mode
         self._num_points = num_points
         self._include_normals = include_normals
@@ -76,14 +77,17 @@ class Dataset(data.Dataset):
             return point_cloud, item.category, item.name
 
     def _indexing(self):
-        dataset_part_path = os.path.join(self._dataset_path, self._mode)
+        if self._run_type == "train":
+            folder = os.path.join(self._dataset_path, self._mode)
+        else:
+            folder = self._dataset_path
 
         Item = namedtuple("Item", "name category point_cloud renders")
 
-        items_list = sorted(os.listdir(dataset_part_path))
+        items_list = sorted(os.listdir(folder))
 
         for item_name in items_list:
-            case_path = os.path.join(dataset_part_path, item_name)
+            case_path = os.path.join(folder, item_name)
 
             with open(os.path.join(case_path, "meta.json"), "r") as fp:
                 category = json.load(fp)["category"]
@@ -93,7 +97,7 @@ class Dataset(data.Dataset):
                               os.path.isfile(os.path.join(renders_path, file_obj)) and file_obj.endswith(".png")])
 
             self._items.append(
-                Item(item_name, category, os.path.join(dataset_part_path, item_name, "point_cloud.npy"), renders))
+                Item(item_name, category, os.path.join(folder, item_name, "point_cloud.npy"), renders))
 
     def _init_transforms(self):
         self._finish_transforms = transforms.Compose([

@@ -218,7 +218,7 @@ class NetworkWrapper:
         else:
             if dataset_part == "test":
                 return DataLoader(
-                    dataset=Dataset(svr=self._svr, dataset_path=self._dataset_path, mode="test",
+                    dataset=Dataset(svr=self._svr, dataset_path=self._dataset_path, run_type="inference", mode="test",
                                     num_points=self._num_points),
                     batch_size=1,
                     shuffle=False,
@@ -228,7 +228,12 @@ class NetworkWrapper:
                 return None
 
     def _get_categories(self):
-        with open(os.path.join(self._dataset_path, "categories.json"), "r") as fp:
+        if self._mode == "train":
+            categories_filename = os.path.join(self._dataset_path, "categories.json")
+        else:
+            categories_filename = os.path.join(self._snapshots_path, "..", "categories.json")
+
+        with open(categories_filename, "r") as fp:
             categories = json.load(fp)
 
         logger.info("Categories: %s" % str(categories))
