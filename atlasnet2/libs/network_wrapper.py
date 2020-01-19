@@ -4,6 +4,7 @@ import time
 import copy
 import json
 from typing import Optional
+from collections import namedtuple
 
 import numpy as np
 import pandas as pd
@@ -33,7 +34,7 @@ class NetworkWrapper:
                  num_primitives: int = 1, bottleneck_size: int = 1024, learning_rate: float = 0.001,
                  epoch_num_reset_optimizer: int = 1000, multiplier_learning_rate: float = 0.1,
                  result_path: Optional[str] = None, snapshot: Optional[str] = None,
-                 num_points_gen: Optional[int] = None):
+                 num_points_gen: Optional[int] = None, scaling_fn: Optional[str] = None):
         self._svr = svr
         self._mode = mode
         self._vis = vis
@@ -88,6 +89,7 @@ class NetworkWrapper:
 
         if self._mode == "test":
             self._generate_regular_grid()
+            self._scaling_coeffs = self._read_scaling_coeffs(scaling_fn)
 
     def train(self):
         logger.info("Training started!")
@@ -129,7 +131,9 @@ class NetworkWrapper:
                 category = category[0]
                 name = name[0]
 
-                reconstructed_point_cloud = self._network.inference(point_cloud, self._num_points_gen)
+                reconstructed_point_cloud = self._scale_point_cloud(
+                    self._network.inference(point_cloud, self._num_points_gen))
+                point_cloud = self._scale_point_cloud(point_cloud)
 
                 dist_1, dist_2 = self._loss_func(point_cloud.cuda(), reconstructed_point_cloud)
                 loss = torch.mean(dist_1) + torch.mean(dist_2)
@@ -145,6 +149,14 @@ class NetworkWrapper:
                     "[%d/%d] test chamfer loss: %f " % (batch_num, len(self._test_data_loader), loss_value))
 
         self._print_test_stat()
+
+    def _scale_point_cloud(self, point_cloud):
+        if self._scaling_coeffs is not None:
+            point_cloud[:, :, 0] = (point_cloud[:, :, 0] - self._scaling_coeffs.b_x) / self._scaling_coeffs.k_x
+            point_cloud[:, :, 1] = (point_cloud[:, :, 1] - self._scaling_coeffs.b_y) / self._scaling_coeffs.k_y
+            point_cloud[:, :, 2] = (point_cloud[:, :, 2] - self._scaling_coeffs.b_z) / self._scaling_coeffs.k_z
+
+        return point_cloud
 
     def _write_3d_data(self, name, point_cloud, reconstructed_point_cloud):
         write_ply(filename=os.path.join(self._result_path, "%s_input_point_cloud.ply" % name),
@@ -377,3 +389,15 @@ class NetworkWrapper:
         logger.info("\tAvg loss: %.16f" % self._test_loss.avg)
         logger.info("\tPer cat avg loss: " + ", ".join(
             ["%s: %.16f" % (key, self._per_cat_test_loss[key].avg) for key in self._per_cat_test_loss]))
+
+    @staticmethod
+    def _read_scaling_coeffs(filename):
+        Coeffs = namedtuple("Coeffs", ("k_x", "b_x", "k_y", "b_y", "k_z", "b_z"))
+
+        if filename is not None:
+            with open(filename, "r") as fp:
+                data = json.load(fp)
+                return Coeffs(k_x=data["k_x"], b_x=data["b_x"], k_y=data["k_y"], b_y=data["b_y"], k_z=data["k_z"],
+                              b_z=data["b_z"])
+
+        return None

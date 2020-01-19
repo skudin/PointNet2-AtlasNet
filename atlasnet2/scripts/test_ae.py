@@ -23,7 +23,8 @@ def main():
                              bottleneck_size=settings["bottleneck_size"], learning_rate=settings["learning_rate"],
                              epoch_num_reset_optimizer=settings["epoch_num_reset_optimizer"],
                              multiplier_learning_rate=settings["multiplier_learning_rate"], result_path=settings.output,
-                             snapshot=settings.snapshot + ".pth", num_points_gen=settings.num_points_gen)
+                             snapshot=settings.snapshot + ".pth", num_points_gen=settings.num_points_gen,
+                             scaling_fn=settings.scaling_fn)
     network.test()
 
 

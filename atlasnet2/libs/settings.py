@@ -15,6 +15,7 @@ class Settings:
         self.num_points_gen = None
         self.input = None
         self.output = None
+        self.scaling = None
 
         self._read_command_prompt_parser(settings_type, mode)
         self._init_values()
@@ -32,6 +33,7 @@ class Settings:
             parser.add_argument("-s", "--snapshot", required=True, choices=("latest", "best"), help="snapshot name")
             parser.add_argument("-i", "--input", required=True, type=str, help="input data for inference")
             parser.add_argument("-o", "--output", required=True, type=str, help="output folder")
+            parser.add_argument("--scaling_fn", type=str, help="filename with information about scaling")
 
             if settings_type == "ae":
                 parser.add_argument("-n", "--num_points_gen", type=int, help="number of points to generate")
@@ -48,6 +50,7 @@ class Settings:
             self.snapshot = args.snapshot
             self.input = args.input
             self.output = args.output
+            self.scaling_fn = args.scaling_fn
 
             if settings_type == "ae":
                 self.num_points_gen = args.num_points_gen
