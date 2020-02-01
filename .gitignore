@@ -214,7 +214,11 @@ dmypy.json
 !packages/pointnet2_ext/include
 /.project
 data/shapenet/shapenet_tiny
+data/shapenet/shapenet_tiny_test
 data/36_wax_up
 data/36_wax_up_tiny
 data/tmp
 experiments
+data/debug_meshing
+data/36_wax_ups
+data/ae_inference

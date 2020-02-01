@@ -1,21 +1,22 @@
 import logging
 import os
+import os.path as osp
 import time
 import copy
 import json
 from typing import Optional
 from collections import namedtuple
+from operator import itemgetter
 
+import open3d as o3d
 import numpy as np
-import pandas as pd
 import torch
 from torch.utils.data import DataLoader
 
-import atlasnet2.libs.helpers as h
 from atlasnet2.datasets.dataset import Dataset
 from atlasnet2.networks.network import Network
 from atlasnet2.libs.helpers import AverageValueMeter
-from atlasnet2.libs.ply import write_ply
+import atlasnet2.libs.meshing as meshing
 
 import dist_chamfer
 import atlasnet2.configuration as conf
@@ -88,7 +89,6 @@ class NetworkWrapper:
         self._epoch_learning_time = 0.0
 
         if self._mode == "test":
-            self._generate_regular_grid()
             self._scaling_coeffs = self._read_scaling_coeffs(scaling_fn)
 
     def train(self):
@@ -125,6 +125,8 @@ class NetworkWrapper:
         self._reset_per_cat_test_loss()
         self._network.set_test_mode()
 
+        losses_rating = list()
+
         with torch.no_grad():
             for batch_num, batch_data in enumerate(self._test_data_loader, 1):
                 point_cloud, category, name = batch_data
@@ -140,14 +142,20 @@ class NetworkWrapper:
 
                 loss_value = loss.item()
                 self._test_loss.update(loss_value)
+                losses_rating.append({
+                    "name": name,
+                    "category": category,
+                    "loss": loss_value
+                })
 
                 self._per_cat_test_loss[category].update(loss_value)
 
-                self._write_3d_data(name, point_cloud, reconstructed_point_cloud)
+                self._write_3d_data(name, category, point_cloud, reconstructed_point_cloud)
 
                 logger.info(
                     "[%d/%d] test chamfer loss: %f " % (batch_num, len(self._test_data_loader), loss_value))
 
+        self._save_test_metadata(losses_rating)
         self._print_test_stat()
 
     def _scale_point_cloud(self, point_cloud):
@@ -158,54 +166,29 @@ class NetworkWrapper:
 
         return point_cloud
 
-    def _write_3d_data(self, name, point_cloud, reconstructed_point_cloud):
-        write_ply(filename=os.path.join(self._result_path, "%s_input_point_cloud.ply" % name),
-                  points=pd.DataFrame(point_cloud.data.squeeze().numpy()), as_text=True)
+    def _write_3d_data(self, name, category, point_cloud, reconstructed_point_cloud):
+        item_path = osp.join(self._result_path, name)
+        os.makedirs(item_path)
 
-        write_ply(filename=os.path.join(self._result_path,
-                                        "%s_output_point_cloud_%d_points.ply" % (name, self._num_points_gen)),
-                  points=pd.DataFrame(reconstructed_point_cloud.cpu().data.squeeze().numpy()), as_text=True)
+        self._save_point_cloud(output=osp.join(item_path, "input_point_cloud.ply"),
+                               point_cloud=point_cloud.cpu().numpy().squeeze())
+        self._save_point_cloud(output=osp.join(item_path, "output_point_cloud.ply"),
+                               point_cloud=reconstructed_point_cloud.cpu().numpy().squeeze())
+        self._save_item_metadata(item_path, category)
 
-    def _generate_regular_grid(self):
-        logger.info("Generation of regular grid...")
-        grain = int(np.sqrt(self._num_points_gen / self._num_primitives)) - 1.0
-        logger.info("Grain: %f" % grain)
-
-        self._faces = []
-        vertices = []
-        vertex_colors = []
-        colors = h.get_colors(self._num_primitives)
-
-        for i in range(0, int(grain + 1)):
-            for j in range(0, int(grain + 1)):
-                vertices.append([i / grain, j / grain])
-
-        for prim in range(0, self._num_primitives):
-            for i in range(0, int(grain + 1)):
-                for j in range(0, int(grain + 1)):
-                    vertex_colors.append(colors[prim])
-
-            for i in range(1, int(grain + 1)):
-                for j in range(0, (int(grain + 1) - 1)):
-                    self._faces.append([(grain + 1) * (grain + 1) * prim + j + (grain + 1) * i,
-                                        (grain + 1) * (grain + 1) * prim + j + (grain + 1) * i + 1,
-                                        (grain + 1) * (grain + 1) * prim + j + (grain + 1) * (i - 1)])
-
-            for i in range(0, (int((grain + 1)) - 1)):
-                for j in range(1, int((grain + 1))):
-                    self._faces.append([(grain + 1) * (grain + 1) * prim + j + (grain + 1) * i,
-                                        (grain + 1) * (grain + 1) * prim + j + (grain + 1) * i - 1,
-                                        (grain + 1) * (grain + 1) * prim + j + (grain + 1) * (i + 1)])
-
-        self._grid = [vertices for i in range(0, self._num_primitives)]
-        self._grid_pytorch = torch.Tensor(int(self._num_primitives * (grain + 1) * (grain + 1)), 2)
-        for i in range(self._num_primitives):
-            for j in range(int((grain + 1) * (grain + 1))):
-                self._grid_pytorch[int(j + (grain + 1) * (grain + 1) * i), 0] = vertices[j][0]
-                self._grid_pytorch[int(j + (grain + 1) * (grain + 1) * i), 1] = vertices[j][1]
-
-        logger.info("Number vertices: %d" % (len(vertices) * self._num_primitives))
-        logger.info("Regular grid generated.")
+        # if category == "wax_up":
+        #     if self._num_points_gen >= 10000:
+        #         margin_approx_points_number = 50
+        #     else:
+        #         margin_approx_points_number = 25
+        #     mesh = meshing.wax_up_meshing(point_cloud=reconstructed_point_cloud_np,
+        #                                   margin_approx_points_number=margin_approx_points_number)
+        # else:
+        #     mesh = meshing.meshing(reconstructed_point_cloud_np)
+        #
+        # o3d.io.write_triangle_mesh(
+        #     osp.join(self._result_path, "%s_output_mesh_%d_points.ply" % (name, self._num_points_gen)), mesh,
+        #     write_ascii=True, write_vertex_colors=False)
 
     def _get_data_loader(self, dataset_part: str = "test", gen_view: bool = False):
         logger.info("\nInitializing data loader. Mode: %s, dataset part: %s.\n" % (self._mode, dataset_part))
@@ -390,6 +373,23 @@ class NetworkWrapper:
         logger.info("\tPer cat avg loss: " + ", ".join(
             ["%s: %.16f" % (key, self._per_cat_test_loss[key].avg) for key in self._per_cat_test_loss]))
 
+    def _save_test_metadata(self, losses_rating):
+        filename = osp.join(self._result_path, "metadata.json")
+        losses_rating.sort(key=itemgetter("loss"), reverse=True)
+
+        metadata = {
+            "snapshot": os.path.join(self._snapshots_path, self._snapshot),
+            "num_points_gen": self._num_points_gen,
+            "scaling": self._scaling_coeffs._asdict() if self._scaling_coeffs is not None else None,
+            "avg_chamfer_loss": self._test_loss.avg,
+            "losses_raiting": losses_rating
+        }
+        
+        logger.info("Saving test metadata to %s" % filename)
+        with open(filename, "w") as fp:
+            json.dump(metadata, fp=fp, indent=4)
+        logger.info("Test metadata saved.")
+
     @staticmethod
     def _read_scaling_coeffs(filename):
         Coeffs = namedtuple("Coeffs", ("k_x", "b_x", "k_y", "b_y", "k_z", "b_z"))
@@ -401,3 +401,14 @@ class NetworkWrapper:
                               b_z=data["b_z"])
 
         return None
+
+    @staticmethod
+    def _save_point_cloud(output, point_cloud):
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(point_cloud)
+        o3d.io.write_point_cloud(output, pcd)
+
+    @staticmethod
+    def _save_item_metadata(output_dir, category):
+        with open(osp.join(output_dir, "metadata.json"), "w") as fp:
+            json.dump(dict(category=category), fp=fp, indent=4)
