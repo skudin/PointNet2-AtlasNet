@@ -145,6 +145,10 @@ class NetworkWrapper:
 
                 self._write_3d_data(name, point_cloud, reconstructed_point_cloud)
 
+                # TODO: debug, remove after using.
+                np.save(os.path.join(self._result_path, "%s_output_point_cloud.npyy" % name),
+                        reconstructed_point_cloud.cpu().numpy())
+
                 logger.info(
                     "[%d/%d] test chamfer loss: %f " % (batch_num, len(self._test_data_loader), loss_value))
 
