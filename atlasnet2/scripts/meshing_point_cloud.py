@@ -15,8 +15,9 @@ def main():
     normals = np.asarray(pcd.normals)
     pcd.normals = o3d.utility.Vector3dVector(-normals)
 
-    mesh, _ = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(pcd)
-    o3d.io.write_triangle_mesh("data/debug_meshing/1_primitive_2500_points.ply", mesh)
+    mesh, _ = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(pcd, depth=8, scale=1.1)
+    o3d.io.write_triangle_mesh("data/debug_meshing/1_primitive_2500_points.ply", mesh, write_ascii=True,
+                               write_vertex_colors=False)
     o3d.io.write_point_cloud("data/debug_meshing/1_primitive_2500_points_point_cloud.ply", pcd)
     print("Hello world!")
 
