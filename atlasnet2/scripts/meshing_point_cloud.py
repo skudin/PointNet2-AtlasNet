@@ -9,7 +9,7 @@ def main():
     pcd.points = o3d.utility.Vector3dVector(point_cloud_np)
 
     pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(
-        radius=1.0, max_nn=30))
+        radius=1.0, max_nn=30), fast_normal_computation=False)
     pcd.orient_normals_towards_camera_location(camera_location=[0.0, 0.0, 0.0])
 
     normals = np.asarray(pcd.normals)
