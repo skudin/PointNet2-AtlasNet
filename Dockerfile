@@ -3,10 +3,40 @@ FROM nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04
 
 MAINTAINER Stepan Kudin <kudin.stepan@yandex.ru>
 
+ENV DEBIAN_FRONTEND noninteractive
 ENV PYTHONPATH=/app:$PYTHONPATH
 
 # Install some basic utilities
-RUN apt-get update --fix-missing && apt-get install -y \
+RUN apt-get update --fix-missing && \
+    apt-get install -y --no-install-recommends \
+    apt-utils \
+    build-essential \
+    cmake \
+    gdb \
+    libeigen3-dev \
+    libgl1-mesa-dev \
+    libgl1-mesa-glx \
+    libglew-dev \
+    libglfw3-dev \
+    libglu1-mesa-dev \
+    libjsoncpp-dev \
+    libosmesa6-dev \
+    libpng-dev \
+    lxde \
+    mesa-utils \
+    ne \
+    python3-minimal \
+    python3-dev \
+    python3-pip \
+    python3-setuptools \
+    python3-tk \
+    python3-dbg \
+    pybind11-dev \
+    software-properties-common \
+    x11vnc \
+    xorg-dev \
+    xterm \
+    xvfb \
     curl \
     ca-certificates \
     sudo \
@@ -19,8 +49,6 @@ RUN apt-get update --fix-missing && apt-get install -y \
     libsm6 \
     libxrender1 \
     unzip \
-    python3-minimal \
-    python3-pip \
     gcc \
  && rm -rf /var/lib/apt/lists/*
 
