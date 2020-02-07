@@ -1,0 +1,14 @@
+{
+  "dataset": "/app/data/36_wax_ups_local_norm/",
+  "num_epochs": 400,
+  "batch_size": 32,
+  "num_workers": 4,
+  "encoder_type": "pointnet2",
+  "pretrained_ae": "/app/experiments/36_wax_ups_local_norm_pointnet2_atlasnet_3600_points_ae_25_primitives/snapshots/best.pth",
+  "num_points": 3600,
+  "num_primitives": 25,
+  "bottleneck_size": 1024,
+  "learning_rate": 0.00001,
+  "epoch_num_reset_optimizer": 100,
+  "multiplier_learning_rate": 0.1
+}
