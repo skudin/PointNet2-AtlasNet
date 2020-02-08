@@ -4,7 +4,7 @@ import open3d as o3d
 
 NETWORK_RESULT_FILENAME = "data/debug_meshing/input/1_primitive_2500_points.npy"
 OUTPUT_PREFIX = "data/debug_meshing/output/1_primitive_2500_points"
-CAMERA_LOCATION = np.array([0.0, 0.0, 0.0])
+CAMERA_LOCATION = np.array([0.0, -100.0, 0.0])
 EPS = 1e-3
 
 
@@ -33,6 +33,12 @@ def main():
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(point_cloud_np)
 
+    o3d.io.write_point_cloud(OUTPUT_PREFIX + "_point_cloud.ply", pcd)
+
+    # camera_location = pcd.get_center()
+
+    # pcd.points.append(camera_location)
+
     pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(
         radius=1.0, max_nn=30), fast_normal_computation=True)
 
@@ -42,7 +48,7 @@ def main():
 
     o3d.io.write_point_cloud(OUTPUT_PREFIX + "_point_cloud_with_normals_after_orient.ply", pcd)
 
-    find_bad_normals(pcd, CAMERA_LOCATION)
+    # find_bad_normals(pcd, CAMERA_LOCATION)
 
     normals = np.asarray(pcd.normals)
     pcd.normals = o3d.utility.Vector3dVector(-normals)
