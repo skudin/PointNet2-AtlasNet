@@ -2,10 +2,27 @@ import numpy as np
 import open3d as o3d
 
 
-def main():
-    NETWORK_RESULT_FILENAME = "data/debug_meshing/input/1_primitive_2500_points.npy"
-    OUTPUT_PREFIX = "data/debug_meshing/output/1_primitive_2500_points"
+NETWORK_RESULT_FILENAME = "data/debug_meshing/input/1_primitive_2500_points.npy"
+OUTPUT_PREFIX = "data/debug_meshing/output/1_primitive_2500_points"
+CAMERA_LOCATION = np.array([0.0, 0.0, 0.0])
+EPS = 0.1
 
+
+def find_bad_normals(pcd, camera_location):
+    bad_normals = list()
+
+    for index in range(len(pcd.points)):
+        point = pcd.points[index]
+        normal = pcd.normals[index]
+
+        dot_product = np.dot((camera_location - point), normal)
+
+        if dot_product < EPS:
+            bad_normals.append((index, dot_product))
+    pass
+
+
+def main():
     point_cloud_np = np.load(NETWORK_RESULT_FILENAME).squeeze()
 
     pcd = o3d.geometry.PointCloud()
@@ -16,9 +33,11 @@ def main():
 
     o3d.io.write_point_cloud(OUTPUT_PREFIX + "_point_cloud_with_raw_normals.ply", pcd)
 
-    pcd.orient_normals_towards_camera_location(camera_location=[0.0, 0.0, 0.0])
+    pcd.orient_normals_towards_camera_location(camera_location=CAMERA_LOCATION)
 
     o3d.io.write_point_cloud(OUTPUT_PREFIX + "_point_cloud_with_normals_after_orient.ply", pcd)
+
+    find_bad_normals(pcd, CAMERA_LOCATION)
 
     normals = np.asarray(pcd.normals)
     pcd.normals = o3d.utility.Vector3dVector(-normals)
