@@ -27,6 +27,44 @@ def find_bad_normals(pcd, camera_location):
     pass
 
 
+class Plane:
+    def __init__(self, point, normal):
+        self._a = normal[0]
+        self._b = normal[1]
+        self._c = normal[2]
+        self._d = -np.dot(point, normal)
+
+
+class AxisAlignedBoundingBox:
+    def __init__(self, point_cloud):
+        self._init_planes(point_cloud)
+
+        pass
+
+    def _init_planes(self, point_cloud):
+        bounding_box_tmp = point_cloud.get_axis_aligned_bounding_box()
+        min_bound = bounding_box_tmp.min_bound
+        max_bound = bounding_box_tmp.max_bound
+
+        self._planes = list()
+        self._create_planes(min_bound, "min")
+        self._create_planes(max_bound, "max")
+
+    def _create_planes(self, point, point_type):
+        value = 1.0
+        if point_type == "min":
+            value = -1.0
+        normals = (np.array((value, 0.0, 0.0)), np.array((0.0, value, 0.0)), np.array((0.0, 0.0, value)))
+
+        for normal in normals:
+            self._planes.append(Plane(point, normal))
+
+
+def estimate_normals(point_cloud):
+    bounding_box = AxisAlignedBoundingBox(point_cloud)
+    pass
+
+
 def main():
     point_cloud_np = np.load(NETWORK_RESULT_FILENAME).squeeze()
 
@@ -35,9 +73,7 @@ def main():
 
     o3d.io.write_point_cloud(OUTPUT_PREFIX + "_point_cloud.ply", pcd)
 
-    # camera_location = pcd.get_center()
-
-    # pcd.points.append(camera_location)
+    estimate_normals(pcd)
 
     pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(
         radius=1.0, max_nn=30), fast_normal_computation=True)
