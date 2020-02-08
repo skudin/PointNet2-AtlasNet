@@ -5,7 +5,7 @@ import open3d as o3d
 NETWORK_RESULT_FILENAME = "data/debug_meshing/input/1_primitive_2500_points.npy"
 OUTPUT_PREFIX = "data/debug_meshing/output/1_primitive_2500_points"
 CAMERA_LOCATION = np.array([0.0, 0.0, 0.0])
-EPS = 0.1
+EPS = 1e-3
 
 
 def find_bad_normals(pcd, camera_location):
@@ -15,7 +15,12 @@ def find_bad_normals(pcd, camera_location):
         point = pcd.points[index]
         normal = pcd.normals[index]
 
-        dot_product = np.dot((camera_location - point), normal)
+        radius_vector = camera_location - point
+        radius_vector /= np.linalg.norm(radius_vector)
+
+        normal /= np.linalg.norm(normal)
+
+        dot_product = np.dot(radius_vector, normal)
 
         if dot_product < EPS:
             bad_normals.append((index, dot_product))
