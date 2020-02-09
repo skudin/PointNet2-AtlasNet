@@ -48,10 +48,6 @@ def fix_normals(point_cloud, max_iteration=5):
                 point_cloud.normals[i] = -normal
                 changed_normals_counter += 1
 
-        pass
-
-    pass
-
 
 def estimate_normals(point_cloud, radius=0.5, max_nn=30):
     point_cloud.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(
@@ -66,8 +62,30 @@ def estimate_normals(point_cloud, radius=0.5, max_nn=30):
     fix_normals(point_cloud)
 
 
-def create_mesh(point_cloud, depth=8, scale=1.1):
+def compute_threshold(point_cloud):
+    nearest_neighbor_distance = np.asarray(point_cloud.compute_nearest_neighbor_distance())
+
+    mean = np.mean(nearest_neighbor_distance)
+    std = np.std(nearest_neighbor_distance)
+
+    return 2.0 * (mean + 3.0 * std)
+
+
+def create_mesh(point_cloud, depth=9, scale=1.1):
     mesh, _ = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(point_cloud, depth=depth, scale=scale)
+    mesh = mesh.subdivide_midpoint(number_of_iterations=1)
+
+    mesh_point_cloud = o3d.geometry.PointCloud(mesh.vertices)
+
+    threshold = compute_threshold(point_cloud)
+    distances = np.asarray(mesh_point_cloud.compute_point_cloud_distance(target=point_cloud))
+
+    vertex_indices_to_remove = list()
+    for i in range(len(mesh.vertices)):
+        if distances[i] > threshold:
+            vertex_indices_to_remove.append(i)
+
+    mesh.remove_vertices_by_index(vertex_indices=vertex_indices_to_remove)
 
     return mesh
 
