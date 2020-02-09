@@ -6,9 +6,7 @@ import open3d as o3d
 
 NETWORK_RESULT_FILENAME = "data/debug_meshing/input/1_primitive_10000_points.npy"
 OUTPUT_PREFIX = "data/debug_meshing/output/1_primitive_2500_points"
-CAMERA_LOCATION = np.array([0.0, -100.0, 0.0])
 EPS = 1e-12
-STEP = 10.0
 
 
 def compute_search_radius(point_cloud):
@@ -68,6 +66,12 @@ def estimate_normals(point_cloud, radius=0.5, max_nn=30):
     fix_normals(point_cloud)
 
 
+def create_mesh(point_cloud, depth=8, scale=1.1):
+    mesh, _ = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(point_cloud, depth=depth, scale=scale)
+
+    return mesh
+
+
 def main():
     point_cloud_np = np.load(NETWORK_RESULT_FILENAME).squeeze()
 
@@ -80,13 +84,11 @@ def main():
 
     o3d.io.write_point_cloud(OUTPUT_PREFIX + "_point_cloud_with_normals.ply", pcd)
 
-    # mesh, _ = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(pcd, depth=8, scale=1.1)
-    # mesh_2 = o3d.geometry.TriangleMesh.create_from_point_cloud_ball_pivoting(pcd, radii=o3d.utility.DoubleVector((0.1, 0.2)))
-    # o3d.io.write_triangle_mesh("data/debug_meshing/1_primitive_2500_points.ply", mesh, write_ascii=True,
-    #                            write_vertex_colors=False)
-    # o3d.io.write_triangle_mesh("data/debug_meshing/1_primitive_2500_points_cloud_ball_pivoting.ply", mesh_2, write_ascii=True,
-    #                            write_vertex_colors=False)
-    # o3d.io.write_point_cloud("data/debug_meshing/1_primitive_2500_points_point_cloud.ply", pcd)
+    mesh = create_mesh(pcd)
+
+    o3d.io.write_triangle_mesh(OUTPUT_PREFIX + "_mesh.ply", mesh, write_ascii=True,
+                               write_vertex_colors=False)
+
     print("Done.")
 
 
