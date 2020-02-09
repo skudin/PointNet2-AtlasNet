@@ -7,8 +7,52 @@ import open3d as o3d
 NETWORK_RESULT_FILENAME = "data/debug_meshing/input/1_primitive_10000_points.npy"
 OUTPUT_PREFIX = "data/debug_meshing/output/1_primitive_2500_points"
 CAMERA_LOCATION = np.array([0.0, -100.0, 0.0])
-EPS = 1e-8
+EPS = 1e-12
 STEP = 10.0
+
+
+def compute_search_radius(point_cloud):
+    nearest_neighbor_distance = np.asarray(point_cloud.compute_nearest_neighbor_distance())
+
+    mean = np.mean(nearest_neighbor_distance)
+    std = np.std(nearest_neighbor_distance)
+
+    return 3.0 * (mean + 3.0 * std)
+
+
+def fix_normals(point_cloud, max_iteration=5):
+    kd_tree = o3d.geometry.KDTreeFlann(point_cloud)
+
+    radius = compute_search_radius(point_cloud)
+
+    changed_normals_counter = 1
+    iteration_counter = 0
+    while changed_normals_counter > 0 and iteration_counter < max_iteration:
+        changed_normals_counter = 0
+        iteration_counter += 1
+
+        for i in range(len(point_cloud.points)):
+            normal = np.asarray(point_cloud.normals[i])
+            count, indices, distances  = kd_tree.search_radius_vector_3d(query=point_cloud.points[i], radius=radius)
+
+            sgn = 0
+            for neighbor_num in indices:
+                if neighbor_num == i:
+                    continue
+
+                dot = np.dot(normal, np.asarray(point_cloud.normals[neighbor_num]))
+                if dot < -EPS:
+                    sgn -= 1
+                elif dot > EPS:
+                    sgn += 1
+
+            if sgn < 0:
+                point_cloud.normals[i] = -normal
+                changed_normals_counter += 1
+
+        pass
+
+    pass
 
 
 def estimate_normals(point_cloud, radius=0.5, max_nn=30):
@@ -20,6 +64,8 @@ def estimate_normals(point_cloud, radius=0.5, max_nn=30):
     normals = np.asarray(point_cloud.normals)
     normals *= -1
     point_cloud.normals = o3d.utility.Vector3dVector(normals)
+
+    fix_normals(point_cloud)
 
 
 def main():
