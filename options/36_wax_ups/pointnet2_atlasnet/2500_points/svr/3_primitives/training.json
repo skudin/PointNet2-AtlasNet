@@ -10,5 +10,5 @@
   "bottleneck_size": 1024,
   "learning_rate": 0.000001,
   "epoch_num_reset_optimizer": [100, 200, 300],
-  "multiplier_learning_rate": [0.5, 0.5, 0.5]
+  "multiplier_learning_rate": [0.1, 0.5, 0.5]
 }
