@@ -4,7 +4,7 @@ import numpy as np
 import open3d as o3d
 
 
-NETWORK_RESULT_FILENAME = "data/debug_meshing/input/1_primitive_10000_points.npy"
+NETWORK_RESULT_FILENAME = "data/debug_meshing/input/1_primitive_2500_points.npy"
 OUTPUT_PREFIX = "data/debug_meshing/output/1_primitive_2500_points"
 EPS = 1e-12
 
