@@ -90,19 +90,44 @@ def create_mesh(point_cloud, depth=9, scale=1.1):
     return mesh
 
 
-def get_cylinderical_projection(points):
-    projections = [(np.arctan2(point[2], point[0]), point[2], num) for num, point in enumerate(points)]
-    projections.sort(key=itemgetter(0, 1))
+def get_cylindrical_projection(points):
+    projection = [(np.arctan2(point[2], point[0]), point[2], num) for num, point in enumerate(points)]
+    projection.sort(key=itemgetter(0))
 
-    return projections
+    bins = list()
+    point_num = 0
+    current_bin_angle = projection[point_num][0]
+    current_bin = list()
+    while point_num < len(projection):
+        current_angle = projection[point_num][0]
+        if np.abs(current_angle - current_bin_angle) < EPS:
+            current_bin.append(projection[point_num])
+        else:
+            bins.append(current_bin)
+            current_bin = [projection[point_num]]
+            current_bin_angle = current_angle
+
+        point_num += 1
+    else:
+        if current_bin:
+            bins.append(current_bin)
+
+    for bin in bins:
+        bin.sort(key=itemgetter(1))
+
+    return bins
+
+
+def get_margin(projection):
+
+    pass
 
 
 def create_mesh_with_margin(point_cloud, depth=9, scale=1.1):
     mesh, _ = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(point_cloud, depth=depth, scale=scale)
 
-    point_cloud_proj = get_cylinderical_projection(point_cloud.points)
-    mesh_points_proj = get_cylinderical_projection(mesh.vertices)
-
+    point_cloud_proj = get_cylindrical_projection(point_cloud.points)
+    mesh_points_proj = get_cylindrical_projection(mesh.vertices)
 
     return mesh
 
