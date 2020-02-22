@@ -1,4 +1,4 @@
-from collections import Counter, defaultdict
+from operator import itemgetter
 
 import numpy as np
 import open3d as o3d
@@ -90,6 +90,23 @@ def create_mesh(point_cloud, depth=9, scale=1.1):
     return mesh
 
 
+def get_cylinderical_projection(points):
+    projections = [(np.arctan2(point[2], point[0]), point[2], num) for num, point in enumerate(points)]
+    projections.sort(key=itemgetter(0, 1))
+
+    return projections
+
+
+def create_mesh_with_margin(point_cloud, depth=9, scale=1.1):
+    mesh, _ = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(point_cloud, depth=depth, scale=scale)
+
+    point_cloud_proj = get_cylinderical_projection(point_cloud.points)
+    mesh_points_proj = get_cylinderical_projection(mesh.vertices)
+
+
+    return mesh
+
+
 def main():
     point_cloud_np = np.load(NETWORK_RESULT_FILENAME).squeeze()
 
@@ -102,7 +119,8 @@ def main():
 
     o3d.io.write_point_cloud(OUTPUT_PREFIX + "_point_cloud_with_normals.ply", pcd)
 
-    mesh = create_mesh(pcd)
+    # mesh = create_mesh(pcd)
+    mesh = create_mesh_with_margin(pcd)
 
     o3d.io.write_triangle_mesh(OUTPUT_PREFIX + "_mesh.ply", mesh, write_ascii=True,
                                write_vertex_colors=False)
