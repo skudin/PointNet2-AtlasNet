@@ -93,7 +93,7 @@ def create_mesh(point_cloud, depth=9, scale=1.1):
 
 
 def get_cylindrical_projection(points):
-    projections = [np.array((np.arctan2(point[2], point[0]), point[2], num), dtype=np.float64) for num, point in
+    projections = [np.array((np.arctan2(point[2], point[0]), point[2]), dtype=np.float64) for num, point in
                    enumerate(points)]
     # projections.sort(key=itemgetter(0, 1))
     # projections = np.array(projections, dtype=np.float64).reshape(2, len(points))
