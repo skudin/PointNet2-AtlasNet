@@ -2,6 +2,8 @@ from operator import itemgetter
 
 import numpy as np
 import open3d as o3d
+import shapely.geometry as geom
+import shapely.ops as ops
 
 
 NETWORK_RESULT_FILENAME = "data/debug_meshing/input/1_primitive_2500_points.npy"
@@ -91,50 +93,12 @@ def create_mesh(point_cloud, depth=9, scale=1.1):
 
 
 def get_cylindrical_projection(points):
-    projections = [np.array((np.arctan2(point[2], point[0]), point[2]), dtype=np.float64) for num, point in
+    projections = [np.array((np.arctan2(point[2], point[0]), point[2], num), dtype=np.float64) for num, point in
                    enumerate(points)]
-    projections.sort(key=itemgetter(0, 1))
-    projections = np.array(projections, dtype=np.float64).reshape(2, len(points))
+    # projections.sort(key=itemgetter(0, 1))
+    # projections = np.array(projections, dtype=np.float64).reshape(2, len(points))
 
     return projections
-
-
-def get_margin(projections):
-    base_point_num = 0
-    base_point = projections[:, base_point_num]
-    kd_tree = o3d.geometry.KDTreeFlann(projections)
-    margin = [base_point]
-
-    while True:
-        knn = 1
-        max_iterations = 10
-
-        found = False
-        iteration = 0
-        while not found and iteration < max_iterations:
-            knn *= 2
-            count, candidates_nums, distances = kd_tree.search_knn_vector_xd(base_point, knn)
-
-            for i in range(count):
-                candidate_num = candidates_nums[i]
-
-                if candidate_num == base_point_num:
-                    continue
-
-                candidate_point = projections[:, candidate_num]
-
-                if base_point[0] < candidate_point[0]:
-                    base_point = candidate_point
-                    base_point_num = candidate_num
-                    margin.append(base_point)
-                    found = True
-
-            iteration += 1
-        else:
-            if iteration == max_iterations:
-                break
-
-    return margin
 
 
 def create_mesh_with_margin(point_cloud, depth=9, scale=1.1):
@@ -143,7 +107,17 @@ def create_mesh_with_margin(point_cloud, depth=9, scale=1.1):
     point_cloud_proj = get_cylindrical_projection(point_cloud.points)
     mesh_points_proj = get_cylindrical_projection(mesh.vertices)
 
-    margin = get_margin(point_cloud_proj)
+    # Delone's triangulation.
+    point_cloud_triangulation = ops.triangulate(geom.MultiPoint(point_cloud_proj))
+    union_polygon = ops.unary_union(point_cloud_triangulation)
+
+    vertex_indices_to_remove = list()
+    for i in range(len(mesh_points_proj)):
+        point = geom.Point(mesh_points_proj[i])
+        if not point.within(union_polygon):
+            vertex_indices_to_remove.append(i)
+
+    mesh.remove_vertices_by_index(vertex_indices=vertex_indices_to_remove)
 
     return mesh
 
