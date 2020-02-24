@@ -91,36 +91,50 @@ def create_mesh(point_cloud, depth=9, scale=1.1):
 
 
 def get_cylindrical_projection(points):
-    projection = [(np.arctan2(point[2], point[0]), point[2], num) for num, point in enumerate(points)]
-    projection.sort(key=itemgetter(0))
+    projections = [np.array((np.arctan2(point[2], point[0]), point[2]), dtype=np.float64) for num, point in
+                   enumerate(points)]
+    projections.sort(key=itemgetter(0, 1))
+    projections = np.array(projections, dtype=np.float64).reshape(2, len(points))
 
-    bins = list()
-    point_num = 0
-    current_bin_angle = projection[point_num][0]
-    current_bin = list()
-    while point_num < len(projection):
-        current_angle = projection[point_num][0]
-        if np.abs(current_angle - current_bin_angle) < EPS:
-            current_bin.append(projection[point_num])
+    return projections
+
+
+def get_margin(projections):
+    base_point_num = 0
+    base_point = projections[:, base_point_num]
+    kd_tree = o3d.geometry.KDTreeFlann(projections)
+    margin = [base_point]
+
+    while True:
+        knn = 1
+        max_iterations = 10
+
+        found = False
+        iteration = 0
+        while not found and iteration < max_iterations:
+            knn *= 2
+            count, candidates_nums, distances = kd_tree.search_knn_vector_xd(base_point, knn)
+
+            for i in range(count):
+                candidate_num = candidates_nums[i]
+
+                if candidate_num == base_point_num:
+                    continue
+
+                candidate_point = projections[:, candidate_num]
+
+                if base_point[0] < candidate_point[0]:
+                    base_point = candidate_point
+                    base_point_num = candidate_num
+                    margin.append(base_point)
+                    found = True
+
+            iteration += 1
         else:
-            bins.append(current_bin)
-            current_bin = [projection[point_num]]
-            current_bin_angle = current_angle
+            if iteration == max_iterations:
+                break
 
-        point_num += 1
-    else:
-        if current_bin:
-            bins.append(current_bin)
-
-    for bin in bins:
-        bin.sort(key=itemgetter(1))
-
-    return bins
-
-
-def get_margin(projection):
-
-    pass
+    return margin
 
 
 def create_mesh_with_margin(point_cloud, depth=9, scale=1.1):
@@ -128,6 +142,8 @@ def create_mesh_with_margin(point_cloud, depth=9, scale=1.1):
 
     point_cloud_proj = get_cylindrical_projection(point_cloud.points)
     mesh_points_proj = get_cylindrical_projection(mesh.vertices)
+
+    margin = get_margin(point_cloud_proj)
 
     return mesh
 
