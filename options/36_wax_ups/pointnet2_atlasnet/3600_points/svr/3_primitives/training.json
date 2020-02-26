@@ -8,7 +8,7 @@
   "num_points": 3600,
   "num_primitives": 3,
   "bottleneck_size": 1024,
-  "learning_rate": 0.0001,
+  "learning_rate": 0.00001,
   "epoch_num_reset_optimizer": 100,
   "multiplier_learning_rate": 0.1
 }
