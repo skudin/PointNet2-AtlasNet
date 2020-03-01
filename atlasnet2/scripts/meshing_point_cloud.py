@@ -93,12 +93,29 @@ def create_mesh(point_cloud, depth=9, scale=1.1):
 
 
 def get_cylindrical_projection(points):
-    projections = [np.array((np.arctan2(point[2], point[0]), point[2]), dtype=np.float64) for num, point in
+    projection = [np.array((np.arctan2(point[2], point[0]), point[2]), dtype=np.float64) for num, point in
                    enumerate(points)]
     # projections.sort(key=itemgetter(0, 1))
     # projections = np.array(projections, dtype=np.float64).reshape(2, len(points))
 
-    return projections
+    return projection
+
+
+def get_margin(projection):
+    # Delone's triangulation.
+    point_cloud_triangulation = ops.triangulate(geom.MultiPoint(projection))
+    union_polygon = ops.unary_union(point_cloud_triangulation)
+
+    boundary = ops.orient(union_polygon.boundary, sign=1.0)
+    bounds = union_polygon.bounds
+
+    margin = list()
+    start_point = (bounds[0], bounds[1])
+    for point in boundary.coords:
+        if point == start_point:
+            pass
+
+    pass
 
 
 def create_mesh_with_margin(point_cloud, depth=9, scale=1.1):
@@ -107,9 +124,7 @@ def create_mesh_with_margin(point_cloud, depth=9, scale=1.1):
     point_cloud_proj = get_cylindrical_projection(point_cloud.points)
     mesh_points_proj = get_cylindrical_projection(mesh.vertices)
 
-    # Delone's triangulation.
-    point_cloud_triangulation = ops.triangulate(geom.MultiPoint(point_cloud_proj))
-    union_polygon = ops.unary_union(point_cloud_triangulation)
+    margin = get_margin(point_cloud_proj)
 
     vertex_indices_to_remove = list()
     for i in range(len(mesh_points_proj)):
