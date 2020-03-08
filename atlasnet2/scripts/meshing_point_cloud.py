@@ -4,6 +4,7 @@ import numpy as np
 import open3d as o3d
 import shapely.geometry as geom
 import shapely.ops as ops
+from matplotlib import pyplot as plt
 
 
 NETWORK_RESULT_FILENAME = "data/debug_meshing/input/1_primitive_2500_points.npy"
@@ -93,8 +94,8 @@ def create_mesh(point_cloud, depth=9, scale=1.1):
 
 
 def get_cylindrical_projection(points):
-    projection = [np.array((np.arctan2(point[2], point[0]), point[2]), dtype=np.float64) for num, point in
-                   enumerate(points)]
+    projection = [np.array((np.arctan2(point[2], point[0]), point[1]), dtype=np.float64) for num, point in
+                  enumerate(points)]
     # projections.sort(key=itemgetter(0, 1))
     # projections = np.array(projections, dtype=np.float64).reshape(2, len(points))
 
@@ -106,16 +107,43 @@ def get_margin(projection):
     point_cloud_triangulation = ops.triangulate(geom.MultiPoint(projection))
     union_polygon = ops.unary_union(point_cloud_triangulation)
 
-    boundary = ops.orient(union_polygon.boundary, sign=1.0)
-    bounds = union_polygon.bounds
+    # Debug.
+    # fig = pyplot.figure(1, figsize=(600, 600), dpi=90)
+    # fig.set_frameon(True)
+    # ax = fig.add_subplot(111)
+    #
+    # for triangle in point_cloud_triangulation:
+    #     patch = PolygonPatch(triangle, facecolor="blue", edgecolor="blue", alpha=0.5, zorder=2)
+    #     ax.add_patch(patch)
+    #
+    # tmp_points = geom.MultiPoint(projection)
+    # for point in tmp_points:
+    #     pyplot.plot(point.x, point.y, 'o', color="gray")
+    #
+    # pyplot.savefig(OUTPUT_PREFIX + "triangulation.png")
+    #
+    # boundary = ops.orient(union_polygon.boundary, sign=1.0)
+    # bounds = union_polygon.bounds
 
-    margin = list()
-    start_point = (bounds[0], bounds[1])
-    for point in boundary.coords:
-        if point == start_point:
-            pass
+    # margin = list()
+    # start_point = (bounds[0], bounds[1])
+    # for point in boundary.coords:
+    #     if point == start_point:
+    #         pass
 
     pass
+
+
+def create_cylindrical_proj_image(points, name):
+    fig, ax = plt.subplots(figsize=(10, 10))
+    ax.set_xlabel("phi")
+    ax.set_ylabel("y")
+
+    x = [point[0] for point in points]
+    y = [point[1] for point in points]
+
+    ax.scatter(x, y, s=0.5)
+    fig.savefig(OUTPUT_PREFIX + "_" + name + ".png")
 
 
 def create_mesh_with_margin(point_cloud, depth=9, scale=1.1):
@@ -123,6 +151,9 @@ def create_mesh_with_margin(point_cloud, depth=9, scale=1.1):
 
     point_cloud_proj = get_cylindrical_projection(point_cloud.points)
     mesh_points_proj = get_cylindrical_projection(mesh.vertices)
+
+    create_cylindrical_proj_image(point_cloud_proj, "point_cloud")
+    create_cylindrical_proj_image(mesh_points_proj, "mesh_points")
 
     margin = get_margin(point_cloud_proj)
 
