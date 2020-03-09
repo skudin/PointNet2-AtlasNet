@@ -102,10 +102,31 @@ def get_cylindrical_projection(points):
     return projection
 
 
+def create_triangulation_image(polygons, name):
+    fig, ax = plt.subplots(figsize=(10, 10))
+    ax.set_xlabel("phi")
+    ax.set_ylabel("y")
+
+    for polygon in polygons:
+        x = [point[0] for point in polygon.boundary.coords]
+        x.append(x[0])
+        y = [point[1] for point in polygon.boundary.coords]
+        y.append(y[0])
+
+        ax.plot(x, y)
+
+    fig.savefig(OUTPUT_PREFIX + "_" + name + ".png")
+
+
 def get_margin(projection):
     # Delone's triangulation.
-    point_cloud_triangulation = ops.triangulate(geom.MultiPoint(projection))
+    point_cloud_triangulation = ops.triangulate(geom.MultiPoint(projection), tolerance=1.0)
     union_polygon = ops.unary_union(point_cloud_triangulation)
+
+    create_triangulation_image(point_cloud_triangulation, "triangulation")
+    create_triangulation_image([union_polygon], "union_polygon")
+
+    print("Debug")
 
     # Debug.
     # fig = pyplot.figure(1, figsize=(600, 600), dpi=90)
