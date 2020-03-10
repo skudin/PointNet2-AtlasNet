@@ -7,8 +7,8 @@ import shapely.ops as ops
 from matplotlib import pyplot as plt
 
 
-NETWORK_RESULT_FILENAME = "data/debug_meshing/input/1_primitive_2500_points.npy"
-OUTPUT_PREFIX = "data/debug_meshing/output/1_primitive_2500_points"
+NETWORK_RESULT_FILENAME = "data/debug_meshing/input/1_primitive_20000_points.npy"
+OUTPUT_PREFIX = "data/debug_meshing/output/1_primitive_20000_points"
 EPS = 1e-12
 
 
@@ -21,7 +21,7 @@ def compute_search_radius(point_cloud):
     return 3.0 * (mean + 3.0 * std)
 
 
-def fix_normals(point_cloud, max_iteration=5):
+def fix_normals(point_cloud, max_iteration=10):
     kd_tree = o3d.geometry.KDTreeFlann(point_cloud)
 
     radius = compute_search_radius(point_cloud)
@@ -189,6 +189,27 @@ def create_mesh_with_margin(point_cloud, depth=9, scale=1.1):
     return mesh
 
 
+def create_mesh_using_dencity(point_cloud, depth=10, scale=1.1):
+    mesh, densities = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(point_cloud, depth=depth, scale=scale)
+    densities = np.asarray(densities)
+    vertices_to_remove = densities < np.quantile(densities, 0.04)
+    mesh.remove_vertices_by_mask(vertices_to_remove)
+
+    return mesh
+
+    # densities = np.asarray(densities)
+    # density_colors = plt.get_cmap('plasma')(
+    #     (densities - densities.min()) / (densities.max() - densities.min()))
+    # density_colors = density_colors[:, :3]
+    # density_mesh = o3d.geometry.TriangleMesh()
+    # density_mesh.vertices = mesh.vertices
+    # density_mesh.triangles = mesh.triangles
+    # density_mesh.triangle_normals = mesh.triangle_normals
+    # density_mesh.vertex_colors = o3d.utility.Vector3dVector(density_colors)
+
+    # return density_mesh
+
+
 def main():
     point_cloud_np = np.load(NETWORK_RESULT_FILENAME).squeeze()
 
@@ -202,7 +223,8 @@ def main():
     o3d.io.write_point_cloud(OUTPUT_PREFIX + "_point_cloud_with_normals.ply", pcd)
 
     # mesh = create_mesh(pcd)
-    mesh = create_mesh_with_margin(pcd)
+    # mesh = create_mesh_with_margin(pcd)
+    mesh = create_mesh_using_dencity(pcd)
 
     o3d.io.write_triangle_mesh(OUTPUT_PREFIX + "_mesh.ply", mesh, write_ascii=True,
                                write_vertex_colors=False)
