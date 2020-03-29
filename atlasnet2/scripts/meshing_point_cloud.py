@@ -7,9 +7,10 @@ import shapely.ops as ops
 from matplotlib import pyplot as plt
 
 
-NETWORK_RESULT_FILENAME = "data/debug_meshing/input/1_primitive_20000_points.npy"
-OUTPUT_PREFIX = "data/debug_meshing/output/1_primitive_20000_points"
+NETWORK_RESULT_FILENAME = "data/debug_meshing/input/1_primitive_2500_points.npy"
+OUTPUT_PREFIX = "data/debug_meshing/output/1_primitive_2500_points"
 EPS = 1e-12
+MAX_MIN_VALUE = 1e5
 
 
 def compute_search_radius(point_cloud):
@@ -210,6 +211,70 @@ def create_mesh_using_dencity(point_cloud, depth=10, scale=1.1):
     # return density_mesh
 
 
+def create_margin_approximation(proj, approximation_points_number):
+    start_point = -np.pi - EPS
+    end_point = np.pi + EPS
+    segment_len = (end_point - start_point) / (approximation_points_number - 1)
+
+    margin = list()
+    start_segment_point = start_point
+    for i in range(approximation_points_number):
+        end_segment_point = start_segment_point + segment_len
+
+        min_value = MAX_MIN_VALUE
+        phi = None
+        for point in proj:
+            if start_segment_point <= point[0] < end_segment_point:
+                if point[1] < min_value:
+                    min_value = point[1]
+                    phi = point[0]
+
+        if min_value != MAX_MIN_VALUE:
+            margin.append((phi, min_value))
+        start_segment_point = end_segment_point
+
+    value = (margin[0][1] + margin[-1][1]) / 2
+    margin.insert(0, (start_point, value))
+    margin.append((end_point, value))
+
+    return margin
+
+
+def draw_margin_with_cylindrical_projection(points, margin, name):
+    fig, ax = plt.subplots(figsize=(10, 10))
+    ax.set_xlabel("phi")
+    ax.set_ylabel("y")
+
+    x = [point[0] for point in points]
+    y = [point[1] for point in points]
+
+    ax.scatter(x, y, s=0.5)
+
+    x = [point[0] for point in margin]
+    y = [point[1] for point in margin]
+
+    ax.plot(x, y)
+
+    fig.savefig(OUTPUT_PREFIX + "_" + name + ".png")
+
+
+def create_mesh_using_cylindrical_projection_and_margin_approximation(point_cloud, depth=9, scale=1.1,
+                                                                      approximation_points_number=25):
+    mesh, _ = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(point_cloud, depth=depth, scale=scale)
+
+    point_cloud_proj = get_cylindrical_projection(point_cloud.points)
+    mesh_points_proj = get_cylindrical_projection(mesh.vertices)
+
+    create_cylindrical_proj_image(point_cloud_proj, "point_cloud")
+    create_cylindrical_proj_image(mesh_points_proj, "mesh_points")
+
+    margin = create_margin_approximation(point_cloud_proj, approximation_points_number)
+
+    draw_margin_with_cylindrical_projection(point_cloud_proj, margin, "point_cloud_with_margin")
+
+    return mesh
+
+
 def main():
     point_cloud_np = np.load(NETWORK_RESULT_FILENAME).squeeze()
 
@@ -224,7 +289,9 @@ def main():
 
     # mesh = create_mesh(pcd)
     # mesh = create_mesh_with_margin(pcd)
-    mesh = create_mesh_using_dencity(pcd)
+    # mesh = create_mesh_using_dencity(pcd)
+    mesh = create_mesh_using_cylindrical_projection_and_margin_approximation(pcd)
+
 
     o3d.io.write_triangle_mesh(OUTPUT_PREFIX + "_mesh.ply", mesh, write_ascii=True,
                                write_vertex_colors=False)
