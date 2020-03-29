@@ -1,4 +1,5 @@
 from operator import itemgetter
+import bisect
 
 import numpy as np
 import open3d as o3d
@@ -7,8 +8,8 @@ import shapely.ops as ops
 from matplotlib import pyplot as plt
 
 
-NETWORK_RESULT_FILENAME = "data/debug_meshing/input/1_primitive_2500_points.npy"
-OUTPUT_PREFIX = "data/debug_meshing/output/1_primitive_2500_points"
+NETWORK_RESULT_FILENAME = "data/debug_meshing/input/1_primitive_10000_points.npy"
+OUTPUT_PREFIX = "data/debug_meshing/output/1_primitive_10000_points"
 EPS = 1e-12
 MAX_MIN_VALUE = 1e5
 
@@ -95,7 +96,7 @@ def create_mesh(point_cloud, depth=9, scale=1.1):
 
 
 def get_cylindrical_projection(points):
-    projection = [np.array((np.arctan2(point[2], point[0]), point[1]), dtype=np.float64) for num, point in
+    projection = [(float(np.arctan2(point[2], point[0])), point[1]) for num, point in
                   enumerate(points)]
     # projections.sort(key=itemgetter(0, 1))
     # projections = np.array(projections, dtype=np.float64).reshape(2, len(points))
@@ -237,6 +238,15 @@ def create_margin_approximation(proj, approximation_points_number):
     margin.insert(0, (start_point, value))
     margin.append((end_point, value))
 
+    for i in range(len(margin) - 1):
+        start_point = margin[i]
+        end_point = margin[i + 1]
+
+        a = (end_point[1] - start_point[1]) / (end_point[0] - start_point[0])
+        c = start_point[1] - a * start_point[0]
+
+        margin[i] = (*start_point, a, c)
+
     return margin
 
 
@@ -258,9 +268,26 @@ def draw_margin_with_cylindrical_projection(points, margin, name):
     fig.savefig(OUTPUT_PREFIX + "_" + name + ".png")
 
 
+def cut_mesh(mesh, mesh_points_proj, margin):
+    base_points = [point[0] for point in margin]
+    vertex_indices_to_remove = list()
+    for num, point in enumerate(mesh_points_proj):
+        segment_num = bisect.bisect_left(base_points, point[0]) - 1
+        a, c = margin[segment_num][2], margin[segment_num][3]
+        border = a * point[0] + c
+
+        if point[1] < border - EPS:
+            vertex_indices_to_remove.append(num)
+
+    mesh.remove_vertices_by_index(vertex_indices=vertex_indices_to_remove)
+
+    return mesh
+
+
 def create_mesh_using_cylindrical_projection_and_margin_approximation(point_cloud, depth=9, scale=1.1,
                                                                       approximation_points_number=25):
     mesh, _ = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(point_cloud, depth=depth, scale=scale)
+    mesh = mesh.subdivide_midpoint(number_of_iterations=1)
 
     point_cloud_proj = get_cylindrical_projection(point_cloud.points)
     mesh_points_proj = get_cylindrical_projection(mesh.vertices)
@@ -271,6 +298,9 @@ def create_mesh_using_cylindrical_projection_and_margin_approximation(point_clou
     margin = create_margin_approximation(point_cloud_proj, approximation_points_number)
 
     draw_margin_with_cylindrical_projection(point_cloud_proj, margin, "point_cloud_with_margin")
+    draw_margin_with_cylindrical_projection(mesh_points_proj, margin, "mesh_points_with_margin")
+
+    mesh = cut_mesh(mesh, mesh_points_proj, margin)
 
     return mesh
 
@@ -290,7 +320,7 @@ def main():
     # mesh = create_mesh(pcd)
     # mesh = create_mesh_with_margin(pcd)
     # mesh = create_mesh_using_dencity(pcd)
-    mesh = create_mesh_using_cylindrical_projection_and_margin_approximation(pcd)
+    mesh = create_mesh_using_cylindrical_projection_and_margin_approximation(pcd, approximation_points_number=50)
 
 
     o3d.io.write_triangle_mesh(OUTPUT_PREFIX + "_mesh.ply", mesh, write_ascii=True,
