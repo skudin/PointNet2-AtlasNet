@@ -8,8 +8,8 @@ import shapely.ops as ops
 from matplotlib import pyplot as plt
 
 
-NETWORK_RESULT_FILENAME = "data/debug_meshing/input/1_primitive_10000_points.npy"
-OUTPUT_PREFIX = "data/debug_meshing/output/1_primitive_10000_points"
+NETWORK_RESULT_FILENAME = "data/debug_meshing/input/1_primitive_2500_points.npy"
+OUTPUT_PREFIX = "data/debug_meshing/output/1_primitive_2500_points"
 EPS = 1e-12
 MAX_MIN_VALUE = 1e5
 
@@ -319,7 +319,7 @@ def main():
     # mesh = create_mesh(pcd)
     # mesh = create_mesh_with_margin(pcd)
     # mesh = create_mesh_using_dencity(pcd)
-    mesh = create_mesh_using_cylindrical_projection_and_margin_approximation(pcd, approximation_points_number=50)
+    mesh = create_mesh_using_cylindrical_projection_and_margin_approximation(pcd, approximation_points_number=25)
 
 
     o3d.io.write_triangle_mesh(OUTPUT_PREFIX + "_mesh.ply", mesh, write_ascii=True,
