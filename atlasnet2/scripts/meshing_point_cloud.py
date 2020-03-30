@@ -287,7 +287,6 @@ def cut_mesh(mesh, mesh_points_proj, margin):
 def create_mesh_using_cylindrical_projection_and_margin_approximation(point_cloud, depth=9, scale=1.1,
                                                                       approximation_points_number=25):
     mesh, _ = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(point_cloud, depth=depth, scale=scale)
-    mesh = mesh.subdivide_midpoint(number_of_iterations=1)
 
     point_cloud_proj = get_cylindrical_projection(point_cloud.points)
     mesh_points_proj = get_cylindrical_projection(mesh.vertices)
