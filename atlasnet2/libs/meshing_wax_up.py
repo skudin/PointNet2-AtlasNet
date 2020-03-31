@@ -167,7 +167,7 @@ def meshing(point_cloud, margin_approx_points_number=25, output_dir=None):
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(point_cloud)
 
-    estimate_normals(point_cloud)
+    estimate_normals(pcd)
 
     if output_dir is not None:
         o3d.io.write_point_cloud(osp.join(output_dir, "point_cloud_with_normals.ply"), pcd)
