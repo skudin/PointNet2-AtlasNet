@@ -59,8 +59,6 @@ class AxisAlignedBoundingBox:
 def estimate_normals_by_bonding_box(point_cloud, radius=1.0, max_nn=30):
     bounding_box = AxisAlignedBoundingBox(point_cloud)
 
-    point_cloud.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=radius, max_nn=max_nn))
-
     for i in range(len(point_cloud.points)):
         plane = bounding_box.get_nearest_plane(point_cloud.points[i])
         sgn = np.dot(point_cloud.normals[i], plane.normal)
@@ -68,7 +66,23 @@ def estimate_normals_by_bonding_box(point_cloud, radius=1.0, max_nn=30):
         if sgn < -EPS:
             point_cloud.normals[i] *= -1.0
 
-    fix_normals(point_cloud)
+    return np.asarray(point_cloud.normals).copy()
+
+
+def estimate_normals_by_camera_location(point_cloud):
+    point_cloud.orient_normals_towards_camera_location(camera_location=point_cloud.get_center())
+
+    normals = np.asarray(point_cloud.normals)
+    normals *= -1
+    point_cloud.normals = o3d.utility.Vector3dVector(normals)
+
+    return np.asarray(point_cloud.normals).copy()
+
+
+def estimate_normals_by_direction(point_cloud):
+    point_cloud.orient_normals_to_align_with_direction(orientation_reference=(0.0, 1.0, 0.0))
+
+    return np.asarray(point_cloud.normals).copy()
 
 
 def compute_search_radius(point_cloud):
@@ -115,10 +129,24 @@ def estimate_normals(point_cloud, radius=0.5, max_nn=30):
     point_cloud.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(
         radius=radius, max_nn=max_nn))
 
-    point_cloud.orient_normals_towards_camera_location(camera_location=point_cloud.get_center())
+    normals_by_camera_location = estimate_normals_by_camera_location(point_cloud)
+    normals_by_direction = estimate_normals_by_direction(point_cloud)
+    normals_by_bounding_box = estimate_normals_by_bonding_box(point_cloud)
 
-    normals = np.asarray(point_cloud.normals)
-    normals *= -1
+    normals = list()
+    for i in range(normals_by_camera_location.shape[0]):
+        counter = 0
+        variants = [normals_by_direction[i], normals_by_bounding_box[i]]
+        candidate = normals_by_camera_location[i]
+        for vec_num in range(2):
+            if np.dot(candidate, variants[vec_num]) > EPS:
+                counter += 1
+
+        if counter > 0:
+            normals.append(candidate)
+        else:
+            normals.append(-candidate)
+
     point_cloud.normals = o3d.utility.Vector3dVector(normals)
 
     fix_normals(point_cloud)
@@ -369,8 +397,7 @@ def main():
 
     o3d.io.write_point_cloud(OUTPUT_PREFIX + "_point_cloud.ply", pcd)
 
-    # estimate_normals(pcd)
-    estimate_normals_by_bonding_box(pcd)
+    estimate_normals(pcd)
 
     o3d.io.write_point_cloud(OUTPUT_PREFIX + "_point_cloud_with_normals.ply", pcd)
 
