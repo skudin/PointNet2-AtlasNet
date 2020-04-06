@@ -11,102 +11,6 @@ import atlasnet2.configuration as conf
 MAX_MIN_VALUE = 1e5
 
 
-def compute_search_radius(point_cloud):
-    nearest_neighbor_distance = np.asarray(point_cloud.compute_nearest_neighbor_distance())
-
-    mean = np.mean(nearest_neighbor_distance)
-    std = np.std(nearest_neighbor_distance)
-
-    return 3.0 * (mean + 3.0 * std)
-
-
-def fix_normals(point_cloud, max_iteration=10):
-    kd_tree = o3d.geometry.KDTreeFlann(point_cloud)
-
-    radius = compute_search_radius(point_cloud)
-
-    changed_normals_counter = 1
-    iteration_counter = 0
-    while changed_normals_counter > 0 and iteration_counter < max_iteration:
-        changed_normals_counter = 0
-        iteration_counter += 1
-
-        for i in range(len(point_cloud.points)):
-            normal = np.asarray(point_cloud.normals[i])
-            count, indices, distances = kd_tree.search_radius_vector_3d(query=point_cloud.points[i], radius=radius)
-
-            sgn = 0
-            for neighbor_num in indices:
-                if neighbor_num == i:
-                    continue
-
-                dot = np.dot(normal, np.asarray(point_cloud.normals[neighbor_num]))
-                if dot < -conf.EPS:
-                    sgn -= 1
-                elif dot > conf.EPS:
-                    sgn += 1
-
-            if sgn < 0:
-                point_cloud.normals[i] = -normal
-                changed_normals_counter += 1
-
-
-def estimate_normals_by_bonding_box(point_cloud):
-    bounding_box = AxisAlignedBoundingBox(point_cloud)
-
-    for i in range(len(point_cloud.points)):
-        plane = bounding_box.get_nearest_plane(point_cloud.points[i])
-        sgn = np.dot(point_cloud.normals[i], plane.normal)
-
-        if sgn < -conf.EPS:
-            point_cloud.normals[i] *= -1.0
-
-    return np.asarray(point_cloud.normals).copy()
-
-
-def estimate_normals_by_camera_location(point_cloud):
-    point_cloud.orient_normals_towards_camera_location(camera_location=point_cloud.get_center())
-
-    normals = np.asarray(point_cloud.normals)
-    normals *= -1
-    point_cloud.normals = o3d.utility.Vector3dVector(normals)
-
-    return np.asarray(point_cloud.normals).copy()
-
-
-def estimate_normals_by_direction(point_cloud):
-    point_cloud.orient_normals_to_align_with_direction(orientation_reference=(0.0, 1.0, 0.0))
-
-    return np.asarray(point_cloud.normals).copy()
-
-
-def estimate_normals(point_cloud, radius=0.5, max_nn=30):
-    point_cloud.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(
-        radius=radius, max_nn=max_nn))
-
-    normals_by_camera_location = estimate_normals_by_camera_location(point_cloud)
-    normals_by_direction = estimate_normals_by_direction(point_cloud)
-    normals_by_bounding_box = estimate_normals_by_bonding_box(point_cloud)
-
-    normals = list()
-    for i in range(normals_by_camera_location.shape[0]):
-        counter = 0
-        variants = [normals_by_direction[i], normals_by_bounding_box[i]]
-        candidate = normals_by_camera_location[i]
-        for vec_num in range(2):
-            if np.dot(candidate, variants[vec_num]) > conf.EPS:
-                counter += 1
-
-        if counter > 0:
-            normals.append(candidate)
-        else:
-            normals.append(-candidate)
-
-    point_cloud.normals = o3d.utility.Vector3dVector(normals)
-
-    fix_normals(point_cloud)
-
-
 class Plane:
     def __init__(self, point, normal):
         self.normal = normal
@@ -147,6 +51,102 @@ class AxisAlignedBoundingBox:
 
         for normal in normals:
             self._planes.append(Plane(point, normal))
+
+
+def estimate_normals_by_bonding_box(point_cloud):
+    bounding_box = AxisAlignedBoundingBox(point_cloud)
+
+    for i in range(len(point_cloud.points)):
+        plane = bounding_box.get_nearest_plane(point_cloud.points[i])
+        sgn = np.dot(point_cloud.normals[i], plane.normal)
+
+        if sgn < -conf.EPS:
+            point_cloud.normals[i] *= -1.0
+
+    return np.asarray(point_cloud.normals).copy()
+
+
+def estimate_normals_by_camera_location(point_cloud):
+    point_cloud.orient_normals_towards_camera_location(camera_location=point_cloud.get_center())
+
+    normals = np.asarray(point_cloud.normals)
+    normals *= -1
+    point_cloud.normals = o3d.utility.Vector3dVector(normals)
+
+    return np.asarray(point_cloud.normals).copy()
+
+
+def estimate_normals_by_direction(point_cloud):
+    point_cloud.orient_normals_to_align_with_direction(orientation_reference=(0.0, 1.0, 0.0))
+
+    return np.asarray(point_cloud.normals).copy()
+
+
+def compute_search_radius(point_cloud):
+    nearest_neighbor_distance = np.asarray(point_cloud.compute_nearest_neighbor_distance())
+
+    mean = np.mean(nearest_neighbor_distance)
+    std = np.std(nearest_neighbor_distance)
+
+    return 3.0 * (mean + 3.0 * std)
+
+
+def fix_normals(point_cloud, max_iteration=10):
+    kd_tree = o3d.geometry.KDTreeFlann(point_cloud)
+
+    radius = compute_search_radius(point_cloud)
+
+    changed_normals_counter = 1
+    iteration_counter = 0
+    while changed_normals_counter > 0 and iteration_counter < max_iteration:
+        changed_normals_counter = 0
+        iteration_counter += 1
+
+        for i in range(len(point_cloud.points)):
+            normal = np.asarray(point_cloud.normals[i])
+            count, indices, distances = kd_tree.search_radius_vector_3d(query=point_cloud.points[i], radius=radius)
+
+            sgn = 0
+            for neighbor_num in indices:
+                if neighbor_num == i:
+                    continue
+
+                dot = np.dot(normal, np.asarray(point_cloud.normals[neighbor_num]))
+                if dot < -conf.EPS:
+                    sgn -= 1
+                elif dot > conf.EPS:
+                    sgn += 1
+
+            if sgn < 0:
+                point_cloud.normals[i] = -normal
+                changed_normals_counter += 1
+
+
+def estimate_normals(point_cloud, radius=0.5, max_nn=30):
+    point_cloud.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(
+        radius=radius, max_nn=max_nn))
+
+    normals_by_camera_location = estimate_normals_by_camera_location(point_cloud)
+    normals_by_direction = estimate_normals_by_direction(point_cloud)
+    normals_by_bounding_box = estimate_normals_by_bonding_box(point_cloud)
+
+    normals = list()
+    for i in range(normals_by_camera_location.shape[0]):
+        counter = 0
+        variants = [normals_by_direction[i], normals_by_bounding_box[i]]
+        candidate = normals_by_camera_location[i]
+        for vec_num in range(2):
+            if np.dot(candidate, variants[vec_num]) > conf.EPS:
+                counter += 1
+
+        if counter > 0:
+            normals.append(candidate)
+        else:
+            normals.append(-candidate)
+
+    point_cloud.normals = o3d.utility.Vector3dVector(normals)
+
+    fix_normals(point_cloud)
 
 
 def create_cylindrical_proj_image(points, output_dir, image_name):
@@ -248,7 +248,7 @@ def create_mesh(point_cloud, margin_approx_points_number=25, depth=9, scale=1.1,
     return mesh
 
 
-def meshing(point_cloud, margin_approx_points_number=25, output_dir=None):
+def wax_up_meshing(point_cloud, margin_approx_points_number=25, output_dir=None):
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(point_cloud)
 
@@ -261,3 +261,23 @@ def meshing(point_cloud, margin_approx_points_number=25, output_dir=None):
 
     if output_dir is not None:
         o3d.io.write_triangle_mesh(osp.join(output_dir, "mesh.ply"), mesh, write_ascii=True, write_vertex_colors=False)
+
+
+def meshing(point_cloud, radius=0.5, max_nn=30, depth=9, scale=1.1, output_dir=None):
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(point_cloud)
+
+    pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(
+        radius=radius, max_nn=max_nn), fast_normal_computation=False)
+
+    estimate_normals_by_camera_location(pcd)
+
+    if output_dir is not None:
+        o3d.io.write_point_cloud(osp.join(output_dir, "point_cloud_with_normals.ply"), pcd)
+
+    mesh, _ = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(pcd=pcd, depth=depth, scale=scale)
+
+    if output_dir is not None:
+        o3d.io.write_triangle_mesh(osp.join(output_dir, "mesh.ply"), mesh, write_ascii=True, write_vertex_colors=False)
+
+    return mesh
