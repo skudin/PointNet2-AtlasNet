@@ -18,7 +18,6 @@ from atlasnet2.datasets.dataset import Dataset
 from atlasnet2.networks.network import Network
 from atlasnet2.libs.helpers import AverageValueMeter
 import atlasnet2.libs.meshing as meshing
-from atlasnet2.libs.ply import write_ply
 
 import dist_chamfer
 import atlasnet2.configuration as conf
@@ -146,7 +145,7 @@ class NetworkWrapper:
 
                 self._per_cat_test_loss[category].update(loss_value)
 
-                self._write_3d_data(name, point_cloud, reconstructed_point_cloud)
+                self._write_3d_data(name, category, point_cloud, reconstructed_point_cloud)
 
                 logger.info(
                     "[%d/%d] test chamfer loss: %f " % (batch_num, len(self._test_data_loader), loss_value))
@@ -161,7 +160,7 @@ class NetworkWrapper:
 
         return point_cloud
 
-    def _write_3d_data(self, name, point_cloud, reconstructed_point_cloud):
+    def _write_3d_data(self, name, category, point_cloud, reconstructed_point_cloud):
         input_point_cloud = o3d.geometry.PointCloud()
         input_point_cloud.points = o3d.utility.Vector3dVector(point_cloud.cpu().numpy().squeeze())
         o3d.io.write_point_cloud(
@@ -175,7 +174,7 @@ class NetworkWrapper:
             osp.join(self._result_path, "%s_output_point_cloud_%d_points.ply" % (name, self._num_points_gen)),
             output_point_cloud)
 
-        if len(self._categories) > 1 or self._categories[0] != "wax_up":
+        if category != "wax_up":
             mesh = meshing.meshing(reconstructed_point_cloud_np)
         else:
             if self._num_points_gen >= 10000:
