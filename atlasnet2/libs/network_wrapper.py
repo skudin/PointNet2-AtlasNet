@@ -174,15 +174,16 @@ class NetworkWrapper:
             osp.join(self._result_path, "%s_output_point_cloud_%d_points.ply" % (name, self._num_points_gen)),
             output_point_cloud)
 
-        if category != "wax_up":
-            mesh = meshing.meshing(reconstructed_point_cloud_np)
-        else:
+        if category == "wax_up":
             if self._num_points_gen >= 10000:
                 margin_approx_points_number = 50
             else:
                 margin_approx_points_number = 25
             mesh = meshing.wax_up_meshing(point_cloud=reconstructed_point_cloud_np,
                                           margin_approx_points_number=margin_approx_points_number)
+        else:
+            mesh = meshing.meshing(reconstructed_point_cloud_np)
+
         o3d.io.write_triangle_mesh(
             osp.join(self._result_path, "%s_output_mesh_%d_points.ply" % (name, self._num_points_gen)), mesh,
             write_ascii=True, write_vertex_colors=False)

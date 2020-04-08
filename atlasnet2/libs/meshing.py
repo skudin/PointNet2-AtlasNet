@@ -262,6 +262,8 @@ def wax_up_meshing(point_cloud, margin_approx_points_number=25, output_dir=None)
     if output_dir is not None:
         o3d.io.write_triangle_mesh(osp.join(output_dir, "mesh.ply"), mesh, write_ascii=True, write_vertex_colors=False)
 
+    return mesh
+
 
 def meshing(point_cloud, radius=0.5, max_nn=30, depth=9, scale=1.1, output_dir=None):
     pcd = o3d.geometry.PointCloud()
