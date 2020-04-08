@@ -9,11 +9,9 @@ from collections import namedtuple
 
 import open3d as o3d
 import numpy as np
-import pandas as pd
 import torch
 from torch.utils.data import DataLoader
 
-import atlasnet2.libs.helpers as h
 from atlasnet2.datasets.dataset import Dataset
 from atlasnet2.networks.network import Network
 from atlasnet2.libs.helpers import AverageValueMeter
@@ -90,7 +88,6 @@ class NetworkWrapper:
         self._epoch_learning_time = 0.0
 
         if self._mode == "test":
-            self._generate_regular_grid()
             self._scaling_coeffs = self._read_scaling_coeffs(scaling_fn)
 
     def train(self):
@@ -187,47 +184,6 @@ class NetworkWrapper:
         o3d.io.write_triangle_mesh(
             osp.join(self._result_path, "%s_output_mesh_%d_points.ply" % (name, self._num_points_gen)), mesh,
             write_ascii=True, write_vertex_colors=False)
-
-    def _generate_regular_grid(self):
-        logger.info("Generation of regular grid...")
-        grain = int(np.sqrt(self._num_points_gen / self._num_primitives)) - 1.0
-        logger.info("Grain: %f" % grain)
-
-        self._faces = []
-        vertices = []
-        vertex_colors = []
-        colors = h.get_colors(self._num_primitives)
-
-        for i in range(0, int(grain + 1)):
-            for j in range(0, int(grain + 1)):
-                vertices.append([i / grain, j / grain])
-
-        for prim in range(0, self._num_primitives):
-            for i in range(0, int(grain + 1)):
-                for j in range(0, int(grain + 1)):
-                    vertex_colors.append(colors[prim])
-
-            for i in range(1, int(grain + 1)):
-                for j in range(0, (int(grain + 1) - 1)):
-                    self._faces.append([(grain + 1) * (grain + 1) * prim + j + (grain + 1) * i,
-                                        (grain + 1) * (grain + 1) * prim + j + (grain + 1) * i + 1,
-                                        (grain + 1) * (grain + 1) * prim + j + (grain + 1) * (i - 1)])
-
-            for i in range(0, (int((grain + 1)) - 1)):
-                for j in range(1, int((grain + 1))):
-                    self._faces.append([(grain + 1) * (grain + 1) * prim + j + (grain + 1) * i,
-                                        (grain + 1) * (grain + 1) * prim + j + (grain + 1) * i - 1,
-                                        (grain + 1) * (grain + 1) * prim + j + (grain + 1) * (i + 1)])
-
-        self._grid = [vertices for i in range(0, self._num_primitives)]
-        self._grid_pytorch = torch.Tensor(int(self._num_primitives * (grain + 1) * (grain + 1)), 2)
-        for i in range(self._num_primitives):
-            for j in range(int((grain + 1) * (grain + 1))):
-                self._grid_pytorch[int(j + (grain + 1) * (grain + 1) * i), 0] = vertices[j][0]
-                self._grid_pytorch[int(j + (grain + 1) * (grain + 1) * i), 1] = vertices[j][1]
-
-        logger.info("Number vertices: %d" % (len(vertices) * self._num_primitives))
-        logger.info("Regular grid generated.")
 
     def _get_data_loader(self, dataset_part: str = "test", gen_view: bool = False):
         logger.info("\nInitializing data loader. Mode: %s, dataset part: %s.\n" % (self._mode, dataset_part))

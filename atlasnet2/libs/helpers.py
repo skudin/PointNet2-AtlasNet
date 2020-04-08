@@ -88,45 +88,6 @@ class AverageValueMeter:
         return self._avg
 
 
-def get_colors(num_colors: int):
-    colors = []
-    for i in range(0, num_colors):
-        colors.append(generate_new_color(colors, pastel_factor=0.9))
-
-    for i in range(0, num_colors):
-        for j in range(0, 3):
-            colors[i][j] = int(colors[i][j] * 256)
-        colors[i].append(255)
-
-    return colors
-
-
-def generate_new_color(existing_colors, pastel_factor=0.5):
-    max_distance = None
-    best_color = None
-
-    for i in range(0, 100):
-        color = get_random_color(pastel_factor=pastel_factor)
-
-        if not existing_colors:
-            return color
-
-        best_distance = min([color_distance(color, c) for c in existing_colors])
-        if not max_distance or best_distance > max_distance:
-            max_distance = best_distance
-            best_color = color
-
-    return best_color
-
-
-def get_random_color(pastel_factor=0.5):
-    return [(x + pastel_factor) / (1.0 + pastel_factor) for x in [random.uniform(0, 1.0) for i in [1, 2, 3]]]
-
-
-def color_distance(c1, c2):
-    return sum([abs(x[0] - x[1]) for x in zip(c1, c2)])
-
-
 def set_random_seed():
     random.seed(conf.RANDOM_SEED)
     np.random.seed(conf.RANDOM_SEED)
