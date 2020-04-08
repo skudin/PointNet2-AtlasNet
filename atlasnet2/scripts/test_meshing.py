@@ -5,7 +5,7 @@ import time
 
 import numpy as np
 
-import atlasnet2.libs.meshing_wax_up as mwu
+import atlasnet2.libs.meshing as meshing
 import atlasnet2.libs.helpers as h
 
 
@@ -34,7 +34,7 @@ def meshing_point_clouds(input_path, output_path, margin_approx_points_number):
         os.makedirs(output_dir)
         point_cloud = np.load(file_obj_path).squeeze()
         # _ = mwu.meshing(point_cloud, margin_approx_points_number, output_dir)
-        _ = mwu.universal_meshing(point_cloud, output_dir=output_dir)
+        _ = meshing.meshing(point_cloud, output_dir=output_dir)
 
         execution_time = time.time() - start_time
         mean_time += execution_time

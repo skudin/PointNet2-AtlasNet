@@ -1,11 +1,13 @@
 import logging
 import os
+import os.path as osp
 import time
 import copy
 import json
 from typing import Optional
 from collections import namedtuple
 
+import open3d as o3d
 import numpy as np
 import pandas as pd
 import torch
@@ -15,6 +17,7 @@ import atlasnet2.libs.helpers as h
 from atlasnet2.datasets.dataset import Dataset
 from atlasnet2.networks.network import Network
 from atlasnet2.libs.helpers import AverageValueMeter
+import atlasnet2.libs.meshing as meshing
 from atlasnet2.libs.ply import write_ply
 
 import dist_chamfer
@@ -145,10 +148,6 @@ class NetworkWrapper:
 
                 self._write_3d_data(name, point_cloud, reconstructed_point_cloud)
 
-                # TODO: debug, remove after using.
-                np.save(os.path.join(self._result_path, "%s_output_point_cloud" % name),
-                        reconstructed_point_cloud.cpu().numpy())
-
                 logger.info(
                     "[%d/%d] test chamfer loss: %f " % (batch_num, len(self._test_data_loader), loss_value))
 
@@ -163,12 +162,31 @@ class NetworkWrapper:
         return point_cloud
 
     def _write_3d_data(self, name, point_cloud, reconstructed_point_cloud):
-        write_ply(filename=os.path.join(self._result_path, "%s_input_point_cloud.ply" % name),
-                  points=pd.DataFrame(point_cloud.data.squeeze().numpy()), as_text=True)
+        input_point_cloud = o3d.geometry.PointCloud()
+        input_point_cloud.points = o3d.utility.Vector3dVector(point_cloud.cpu().numpy().squeeze())
+        o3d.io.write_point_cloud(
+            osp.join(self._result_path, "%s_input_point_cloud_%d_points.ply" % (name, self._num_points)),
+            input_point_cloud)
 
-        write_ply(filename=os.path.join(self._result_path,
-                                        "%s_output_point_cloud_%d_points.ply" % (name, self._num_points_gen)),
-                  points=pd.DataFrame(reconstructed_point_cloud.cpu().data.squeeze().numpy()), as_text=True)
+        reconstructed_point_cloud_np = reconstructed_point_cloud.cpu().numpy().squeeze()
+        output_point_cloud = o3d.geometry.PointCloud()
+        output_point_cloud.points = o3d.utility.Vector3dVector(reconstructed_point_cloud_np)
+        o3d.io.write_point_cloud(
+            osp.join(self._result_path, "%s_output_point_cloud_%d_points.ply" % (name, self._num_points_gen)),
+            output_point_cloud)
+
+        if len(self._categories) > 1 or self._categories[0] != "wax_up":
+            mesh = meshing.meshing(reconstructed_point_cloud_np)
+        else:
+            if self._num_points_gen >= 10000:
+                margin_approx_points_number = 50
+            else:
+                margin_approx_points_number = 25
+            mesh = meshing.wax_up_meshing(point_cloud=reconstructed_point_cloud_np,
+                                          margin_approx_points_number=margin_approx_points_number)
+        o3d.io.write_triangle_mesh(
+            osp.join(self._result_path, "%s_output_mesh_%d_points.ply" % (name, self._num_points_gen)), mesh,
+            write_ascii=True, write_vertex_colors=False)
 
     def _generate_regular_grid(self):
         logger.info("Generation of regular grid...")

@@ -1,6 +1,9 @@
 import os
 import logging
 
+# For fix SIGSEGV.
+import open3d
+
 import atlasnet2.libs.helpers as h
 from atlasnet2.libs.settings import Settings
 from atlasnet2.libs.network_wrapper import NetworkWrapper
