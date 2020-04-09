@@ -6,6 +6,7 @@ import copy
 import json
 from typing import Optional
 from collections import namedtuple
+from operator import itemgetter
 
 import open3d as o3d
 import numpy as np
@@ -124,6 +125,8 @@ class NetworkWrapper:
         self._reset_per_cat_test_loss()
         self._network.set_test_mode()
 
+        losses_rating = list()
+
         with torch.no_grad():
             for batch_num, batch_data in enumerate(self._test_data_loader, 1):
                 point_cloud, category, name = batch_data
@@ -139,6 +142,11 @@ class NetworkWrapper:
 
                 loss_value = loss.item()
                 self._test_loss.update(loss_value)
+                losses_rating.append({
+                    "name": name,
+                    "category": category,
+                    "loss": loss_value
+                })
 
                 self._per_cat_test_loss[category].update(loss_value)
 
@@ -147,6 +155,7 @@ class NetworkWrapper:
                 logger.info(
                     "[%d/%d] test chamfer loss: %f " % (batch_num, len(self._test_data_loader), loss_value))
 
+        self._save_losses_rating(losses_rating)
         self._print_test_stat()
 
     def _scale_point_cloud(self, point_cloud):
@@ -367,6 +376,15 @@ class NetworkWrapper:
         logger.info("\tAvg loss: %.16f" % self._test_loss.avg)
         logger.info("\tPer cat avg loss: " + ", ".join(
             ["%s: %.16f" % (key, self._per_cat_test_loss[key].avg) for key in self._per_cat_test_loss]))
+
+    def _save_losses_rating(self, losses_rating):
+        filename = osp.join(self._result_path, "losses_rating.json")
+        losses_rating.sort(key=itemgetter("loss"), reverse=True)
+        
+        logger.info("Saving losses rating to %s" % filename)
+        with open(filename, "w") as fp:
+            json.dump(losses_rating, fp=fp, indent=4)
+        logger.info("Losses rating saved.")
 
     @staticmethod
     def _read_scaling_coeffs(filename):
