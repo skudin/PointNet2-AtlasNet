@@ -155,7 +155,7 @@ class NetworkWrapper:
                 logger.info(
                     "[%d/%d] test chamfer loss: %f " % (batch_num, len(self._test_data_loader), loss_value))
 
-        self._save_losses_rating(losses_rating)
+        self._save_test_metadata(losses_rating)
         self._print_test_stat()
 
     def _scale_point_cloud(self, point_cloud):
@@ -372,14 +372,22 @@ class NetworkWrapper:
         logger.info("\tPer cat avg loss: " + ", ".join(
             ["%s: %.16f" % (key, self._per_cat_test_loss[key].avg) for key in self._per_cat_test_loss]))
 
-    def _save_losses_rating(self, losses_rating):
-        filename = osp.join(self._result_path, "losses_rating.json")
+    def _save_test_metadata(self, losses_rating):
+        filename = osp.join(self._result_path, "metadata.json")
         losses_rating.sort(key=itemgetter("loss"), reverse=True)
+
+        metadata = {
+            "snapshot": os.path.join(self._snapshots_path, self._snapshot),
+            "num_points_gen": self._num_points_gen,
+            "scaling": self._scaling_coeffs._asdict(),
+            "avg_chamfer_loss": self._test_loss.avg,
+            "losses_raiting": losses_rating
+        }
         
-        logger.info("Saving losses rating to %s" % filename)
+        logger.info("Saving test metadata to %s" % filename)
         with open(filename, "w") as fp:
-            json.dump(losses_rating, fp=fp, indent=4)
-        logger.info("Losses rating saved.")
+            json.dump(metadata, fp=fp, indent=4)
+        logger.info("Test metadata saved.")
 
     @staticmethod
     def _read_scaling_coeffs(filename):
