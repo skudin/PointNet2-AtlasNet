@@ -110,18 +110,11 @@ def fix_normals(pcd, max_iteration=10):
         for i in range(len(point_cloud)):
             count, indices, distances = kd_tree.search_radius_vector_3d(query=point_cloud[i], radius=radius)
 
-            sgn = 0
-            for neighbor_num in indices:
-                if neighbor_num == i:
-                    continue
+            neighbor_normals = normals[indices[1:]]
+            dots = np.dot(neighbor_normals, normals[i])
+            codirectional_count = np.count_nonzero(dots > -EPS)
 
-                dot = np.dot(normals[i], normals[neighbor_num])
-                if dot < -EPS:
-                    sgn -= 1
-                elif dot > EPS:
-                    sgn += 1
-
-            if sgn < 0:
+            if codirectional_count < dots.shape[0] - codirectional_count:
                 normals[i] *= -1
                 changed_normals_counter += 1
 
