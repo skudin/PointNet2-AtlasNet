@@ -167,32 +167,27 @@ class NetworkWrapper:
         return point_cloud
 
     def _write_3d_data(self, name, category, point_cloud, reconstructed_point_cloud):
-        input_point_cloud = o3d.geometry.PointCloud()
-        input_point_cloud.points = o3d.utility.Vector3dVector(point_cloud.cpu().numpy().squeeze())
-        o3d.io.write_point_cloud(
-            osp.join(self._result_path, "%s_input_point_cloud_%d_points.ply" % (name, self._num_points)),
-            input_point_cloud)
+        item_path = osp.join(self._result_path, name)
+        os.makedirs(item_path)
 
-        reconstructed_point_cloud_np = reconstructed_point_cloud.cpu().numpy().squeeze()
-        output_point_cloud = o3d.geometry.PointCloud()
-        output_point_cloud.points = o3d.utility.Vector3dVector(reconstructed_point_cloud_np)
-        o3d.io.write_point_cloud(
-            osp.join(self._result_path, "%s_output_point_cloud_%d_points.ply" % (name, self._num_points_gen)),
-            output_point_cloud)
+        self._save_point_cloud(output=osp.join(item_path, "input_point_cloud.ply"),
+                               point_cloud=point_cloud.cpu().numpy().squeeze())
+        self._save_point_cloud(output=osp.join(item_path, "output_point_cloud.ply"),
+                               point_cloud=reconstructed_point_cloud.cpu().numpy().squeeze())
 
-        if category == "wax_up":
-            if self._num_points_gen >= 10000:
-                margin_approx_points_number = 50
-            else:
-                margin_approx_points_number = 25
-            mesh = meshing.wax_up_meshing(point_cloud=reconstructed_point_cloud_np,
-                                          margin_approx_points_number=margin_approx_points_number)
-        else:
-            mesh = meshing.meshing(reconstructed_point_cloud_np)
-
-        o3d.io.write_triangle_mesh(
-            osp.join(self._result_path, "%s_output_mesh_%d_points.ply" % (name, self._num_points_gen)), mesh,
-            write_ascii=True, write_vertex_colors=False)
+        # if category == "wax_up":
+        #     if self._num_points_gen >= 10000:
+        #         margin_approx_points_number = 50
+        #     else:
+        #         margin_approx_points_number = 25
+        #     mesh = meshing.wax_up_meshing(point_cloud=reconstructed_point_cloud_np,
+        #                                   margin_approx_points_number=margin_approx_points_number)
+        # else:
+        #     mesh = meshing.meshing(reconstructed_point_cloud_np)
+        #
+        # o3d.io.write_triangle_mesh(
+        #     osp.join(self._result_path, "%s_output_mesh_%d_points.ply" % (name, self._num_points_gen)), mesh,
+        #     write_ascii=True, write_vertex_colors=False)
 
     def _get_data_loader(self, dataset_part: str = "test", gen_view: bool = False):
         logger.info("\nInitializing data loader. Mode: %s, dataset part: %s.\n" % (self._mode, dataset_part))
@@ -397,3 +392,9 @@ class NetworkWrapper:
                               b_z=data["b_z"])
 
         return None
+
+    @staticmethod
+    def _save_point_cloud(output, point_cloud):
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(point_cloud)
+        o3d.io.write_point_cloud(output, pcd)
