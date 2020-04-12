@@ -91,10 +91,12 @@ def compute_search_radius(point_cloud):
     return 3.0 * (mean + 3.0 * std)
 
 
-def fix_normals(point_cloud, max_iteration=10):
-    kd_tree = o3d.geometry.KDTreeFlann(point_cloud)
+def fix_normals(pcd, max_iteration=10):
+    kd_tree = o3d.geometry.KDTreeFlann(pcd)
+    radius = compute_search_radius(pcd)
 
-    radius = compute_search_radius(point_cloud)
+    point_cloud = np.asarray(pcd.points)
+    normals = np.asarray(pcd.normals)
 
     changed_normals_counter = 1
     iteration_counter = 0
@@ -102,24 +104,18 @@ def fix_normals(point_cloud, max_iteration=10):
         changed_normals_counter = 0
         iteration_counter += 1
 
-        for i in range(len(point_cloud.points)):
-            normal = np.asarray(point_cloud.normals[i])
-            count, indices, distances = kd_tree.search_radius_vector_3d(query=point_cloud.points[i], radius=radius)
+        for i in range(len(point_cloud)):
+            count, indices, distances = kd_tree.search_radius_vector_3d(query=point_cloud[i], radius=radius)
 
-            sgn = 0
-            for neighbor_num in indices:
-                if neighbor_num == i:
-                    continue
+            neighbor_normals = normals[indices[1:]]
+            dots = np.dot(neighbor_normals, normals[i])
+            codirectional_count = np.count_nonzero(dots > -conf.EPS)
 
-                dot = np.dot(normal, np.asarray(point_cloud.normals[neighbor_num]))
-                if dot < -conf.EPS:
-                    sgn -= 1
-                elif dot > conf.EPS:
-                    sgn += 1
-
-            if sgn < 0:
-                point_cloud.normals[i] = -normal
+            if codirectional_count < dots.shape[0] - codirectional_count:
+                normals[i] *= -1
                 changed_normals_counter += 1
+
+    pcd.normals = o3d.utility.Vector3dVector(normals)
 
 
 def estimate_normals(point_cloud, radius=0.5, max_nn=30):
