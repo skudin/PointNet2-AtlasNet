@@ -174,6 +174,7 @@ class NetworkWrapper:
                                point_cloud=point_cloud.cpu().numpy().squeeze())
         self._save_point_cloud(output=osp.join(item_path, "output_point_cloud.ply"),
                                point_cloud=reconstructed_point_cloud.cpu().numpy().squeeze())
+        self._save_item_metadata(item_path, category)
 
         # if category == "wax_up":
         #     if self._num_points_gen >= 10000:
@@ -406,3 +407,8 @@ class NetworkWrapper:
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(point_cloud)
         o3d.io.write_point_cloud(output, pcd)
+
+    @staticmethod
+    def _save_item_metadata(output_dir, category):
+        with open(osp.join(output_dir, "metadata.json"), "w") as fp:
+            json.dump(dict(category=category), fp=fp, indent=4)
