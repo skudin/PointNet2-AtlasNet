@@ -146,7 +146,7 @@ def estimate_normals(point_cloud, radius=0.5, max_nn=30):
 
     point_cloud.normals = o3d.utility.Vector3dVector(normals)
 
-    fix_normals(point_cloud)
+    fix_normals(point_cloud, max_iteration=10)
 
 
 def create_cylindrical_proj_image(points, output_dir, image_name):
@@ -248,19 +248,21 @@ def create_mesh(point_cloud, margin_approx_points_number=25, depth=9, scale=1.1,
     return mesh
 
 
-def wax_up_meshing(point_cloud, margin_approx_points_number=25, output_dir=None):
+def wax_up_meshing(point_cloud, margin_approx_points_number=25, debug_output_dir=None):
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(point_cloud)
 
     estimate_normals(pcd)
 
-    if output_dir is not None:
-        o3d.io.write_point_cloud(osp.join(output_dir, "point_cloud_with_normals.ply"), pcd)
+    if debug_output_dir is not None:
+        o3d.io.write_point_cloud(osp.join(debug_output_dir, "point_cloud_with_normals.ply"), pcd)
 
-    mesh = create_mesh(point_cloud=pcd, margin_approx_points_number=margin_approx_points_number, output_dir=output_dir)
+    mesh = create_mesh(point_cloud=pcd, margin_approx_points_number=margin_approx_points_number,
+                       output_dir=debug_output_dir)
 
-    if output_dir is not None:
-        o3d.io.write_triangle_mesh(osp.join(output_dir, "mesh.ply"), mesh, write_ascii=True, write_vertex_colors=False)
+    if debug_output_dir is not None:
+        o3d.io.write_triangle_mesh(osp.join(debug_output_dir, "mesh.ply"), mesh, write_ascii=True,
+                                   write_vertex_colors=False)
 
     return mesh
 
