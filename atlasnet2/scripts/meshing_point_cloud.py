@@ -1,5 +1,5 @@
-from operator import itemgetter
 import bisect
+import time
 
 import numpy as np
 import open3d as o3d
@@ -94,10 +94,12 @@ def compute_search_radius(point_cloud):
     return 3.0 * (mean + 3.0 * std)
 
 
-def fix_normals(point_cloud, max_iteration=10):
-    kd_tree = o3d.geometry.KDTreeFlann(point_cloud)
+def fix_normals(pcd, max_iteration=10):
+    kd_tree = o3d.geometry.KDTreeFlann(pcd)
+    radius = compute_search_radius(pcd)
 
-    radius = compute_search_radius(point_cloud)
+    point_cloud = np.asarray(pcd.points)
+    normals = np.asarray(pcd.normals)
 
     changed_normals_counter = 1
     iteration_counter = 0
@@ -105,24 +107,25 @@ def fix_normals(point_cloud, max_iteration=10):
         changed_normals_counter = 0
         iteration_counter += 1
 
-        for i in range(len(point_cloud.points)):
-            normal = np.asarray(point_cloud.normals[i])
-            count, indices, distances  = kd_tree.search_radius_vector_3d(query=point_cloud.points[i], radius=radius)
+        for i in range(len(point_cloud)):
+            count, indices, distances = kd_tree.search_radius_vector_3d(query=point_cloud[i], radius=radius)
 
             sgn = 0
             for neighbor_num in indices:
                 if neighbor_num == i:
                     continue
 
-                dot = np.dot(normal, np.asarray(point_cloud.normals[neighbor_num]))
+                dot = np.dot(normals[i], normals[neighbor_num])
                 if dot < -EPS:
                     sgn -= 1
                 elif dot > EPS:
                     sgn += 1
 
             if sgn < 0:
-                point_cloud.normals[i] = -normal
+                normals[i] *= -1
                 changed_normals_counter += 1
+
+    pcd.normals = o3d.utility.Vector3dVector(normals)
 
 
 def estimate_normals(point_cloud, radius=0.5, max_nn=30):
@@ -376,13 +379,13 @@ def create_mesh_using_cylindrical_projection_and_margin_approximation(point_clou
     point_cloud_proj = get_cylindrical_projection(point_cloud.points)
     mesh_points_proj = get_cylindrical_projection(mesh.vertices)
 
-    create_cylindrical_proj_image(point_cloud_proj, "point_cloud")
-    create_cylindrical_proj_image(mesh_points_proj, "mesh_points")
+    # create_cylindrical_proj_image(point_cloud_proj, "point_cloud")
+    # create_cylindrical_proj_image(mesh_points_proj, "mesh_points")
 
     margin = create_margin_approximation(point_cloud_proj, approximation_points_number)
 
-    draw_margin_with_cylindrical_projection(point_cloud_proj, margin, "point_cloud_with_margin")
-    draw_margin_with_cylindrical_projection(mesh_points_proj, margin, "mesh_points_with_margin")
+    # draw_margin_with_cylindrical_projection(point_cloud_proj, margin, "point_cloud_with_margin")
+    # draw_margin_with_cylindrical_projection(mesh_points_proj, margin, "mesh_points_with_margin")
 
     mesh = cut_mesh(mesh, mesh_points_proj, margin)
 
@@ -397,15 +400,18 @@ def main():
 
     o3d.io.write_point_cloud(OUTPUT_PREFIX + "_point_cloud.ply", pcd)
 
+    start_time = time.time()
+
     estimate_normals(pcd)
 
-    o3d.io.write_point_cloud(OUTPUT_PREFIX + "_point_cloud_with_normals.ply", pcd)
+    # o3d.io.write_point_cloud(OUTPUT_PREFIX + "_point_cloud_with_normals.ply", pcd)
 
     # mesh = create_mesh(pcd)
     # mesh = create_mesh_with_margin(pcd)
     # mesh = create_mesh_using_dencity(pcd)
-    mesh = create_mesh_using_cylindrical_projection_and_margin_approximation(pcd, approximation_points_number=25)
+    mesh = create_mesh_using_cylindrical_projection_and_margin_approximation(pcd, approximation_points_number=50)
 
+    print("Spent time: %f" % (time.time() - start_time))
 
     o3d.io.write_triangle_mesh(OUTPUT_PREFIX + "_mesh.ply", mesh, write_ascii=True,
                                write_vertex_colors=False)
