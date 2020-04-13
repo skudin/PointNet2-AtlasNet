@@ -380,7 +380,7 @@ class NetworkWrapper:
         metadata = {
             "snapshot": os.path.join(self._snapshots_path, self._snapshot),
             "num_points_gen": self._num_points_gen,
-            "scaling": self._scaling_coeffs._asdict(),
+            "scaling": self._scaling_coeffs._asdict() if self._scaling_coeffs is not None else None,
             "avg_chamfer_loss": self._test_loss.avg,
             "losses_raiting": losses_rating
         }
