@@ -220,3 +220,5 @@ data/36_wax_up_tiny
 data/tmp
 experiments
 data/debug_meshing
+data/36_wax_ups
+data/ae_inference
