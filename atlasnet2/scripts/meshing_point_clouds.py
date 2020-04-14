@@ -38,47 +38,50 @@ def meshing_point_cloud(item_path, output_filename):
 
     o3d.io.write_triangle_mesh(output_filename, mesh, write_ascii=True, write_vertex_colors=False)
 
-    return output_filename
-
-
-def wait_futures(futures):
-    for future in cf.as_completed(futures):
-        error = future.exception()
-        if error is None:
-            print("%s is ready." % future.result())
-        else:
-            print("Exception: %s" % str(error))
-
 
 def meshing_point_clouds(input_paths, output_path):
-    start_time = time.time()
+    item_counter = 0
+    total_meshing_time = 0.0
 
-    futures = set()
-    with cf.ProcessPoolExecutor(max_workers=2) as executor:
-        for path in input_paths:
-            output_dir = osp.join(output_path, osp.split(osp.normpath(path))[1])
-            os.makedirs(output_dir)
+    for path in input_paths:
+        output_dir = osp.join(output_path, osp.split(osp.normpath(path))[1])
+        os.makedirs(output_dir)
 
-            for file_obj in os.listdir(path):
-                file_obj_path = osp.join(path, file_obj)
+        for file_obj in os.listdir(path):
+            file_obj_path = osp.join(path, file_obj)
 
-                if not osp.isdir(file_obj_path):
-                    continue
+            if not osp.isdir(file_obj_path):
+                continue
 
-                futures.add(
-                    executor.submit(meshing_point_cloud, file_obj_path, osp.join(output_dir, "%s.ply" % file_obj)))
+            try:
+                start_meshing_time = time.time()
 
-        wait_futures(futures)
+                meshing_point_cloud(file_obj_path, osp.join(output_dir, "%s.ply" % file_obj))
 
-    print("Mean time meshing: %f" % ((time.time() - start_time) / len(futures)))
+                meshing_time = time.time() - start_meshing_time
+                total_meshing_time += meshing_time
+                item_counter += 1
+
+                print("Item %s is ready. Meshing time: %f s" % (file_obj, meshing_time))
+            except Exception as e:
+                print("Item %s is broken." % file_obj)
+
+                raise e
+
+    print("Total items: %d" % item_counter)
+    print("Mean meshing time: %f s" % (total_meshing_time / item_counter))
 
 
 def main():
+    start_execution_time = time.time()
+
     args = parse_command_prompt()
 
     h.create_folder_with_dialog(args.output)
 
     meshing_point_clouds(args.input, args.output)
+
+    print("Total execution time: %f s" % (time.time() - start_execution_time))
 
     print("Done.")
 
