@@ -1,15 +1,24 @@
 import argparse
 import os
 import os.path as osp
-import concurrent.futures as cf
 import json
 import time
+import signal
 
 import numpy as np
 import open3d as o3d
 
 import atlasnet2.libs.helpers as h
 from atlasnet2.libs.meshing import meshing, wax_up_meshing
+
+
+def sigsegv_handler(signum, frame):
+    _ = signum
+    _ = frame
+    print("Caught SIGSEGV.")
+
+
+signal.signal(signal.SIGSEGV, sigsegv_handler)
 
 
 def parse_command_prompt():
@@ -54,6 +63,7 @@ def meshing_point_clouds(input_paths, output_path):
                 continue
 
             try:
+                print("Meshing item %s is started." % file_obj)
                 start_meshing_time = time.time()
 
                 meshing_point_cloud(file_obj_path, osp.join(output_dir, "%s.ply" % file_obj))
