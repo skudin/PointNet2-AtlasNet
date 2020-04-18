@@ -3,49 +3,21 @@ import os
 import os.path as osp
 import json
 import time
-import signal
+import subprocess
 
-import numpy as np
-import open3d as o3d
-
+import atlasnet2.configuration as conf
 import atlasnet2.libs.helpers as h
-from atlasnet2.libs.meshing import meshing, wax_up_meshing
 
 
-def sigsegv_handler(signum, frame):
-    _ = signum
-    _ = frame
-    print("Caught SIGSEGV.")
-
-
-signal.signal(signal.SIGSEGV, sigsegv_handler)
+TIMEOUT = 3 * 60
 
 
 def parse_command_prompt():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", required=True, nargs="+", help="input paths with inference results")
+    parser.add_argument("--input", required=True, help="json file of input paths with inference results")
     parser.add_argument("--output", required=True, help="output path")
 
     return parser.parse_args()
-
-
-def meshing_point_cloud(item_path, output_filename):
-    point_cloud = np.asarray(o3d.io.read_point_cloud(osp.join(item_path, "output_point_cloud.ply")).points)
-
-    with open(osp.join(item_path, "metadata.json"), "r") as fp:
-        category = json.load(fp)["category"]
-
-    if category == "wax_up":
-        if point_cloud.shape[0] >= 10000:
-            margin_approx_points_number = 50
-        else:
-            margin_approx_points_number = 25
-
-        mesh = wax_up_meshing(point_cloud=point_cloud, margin_approx_points_number=margin_approx_points_number)
-    else:
-        mesh = meshing(point_cloud=point_cloud)
-
-    o3d.io.write_triangle_mesh(output_filename, mesh, write_ascii=True, write_vertex_colors=False)
 
 
 def meshing_point_clouds(input_paths, output_path):
@@ -66,7 +38,19 @@ def meshing_point_clouds(input_paths, output_path):
                 print("Meshing item %s is started." % file_obj)
                 start_meshing_time = time.time()
 
-                meshing_point_cloud(file_obj_path, osp.join(output_dir, "%s.ply" % file_obj))
+                passed = False
+                while not passed:
+                    try:
+                        ret = subprocess.run(
+                            ["python3", "%s/atlasnet2/scripts/meshing_point_cloud.py" % conf.BASE_PATH, file_obj_path,
+                             osp.join(output_dir, "%s.ply" % file_obj)], timeout=TIMEOUT)
+
+                        if ret.returncode == 0:
+                            passed = True
+                        else:
+                            print("Item was not passed. Retrying.")
+                    except subprocess.TimeoutExpired:
+                        print("Timeout. Retrying.")
 
                 meshing_time = time.time() - start_meshing_time
                 total_meshing_time += meshing_time
@@ -82,14 +66,20 @@ def meshing_point_clouds(input_paths, output_path):
     print("Mean meshing time: %f s" % (total_meshing_time / item_counter))
 
 
+def read_paths(filename):
+    with open(filename, "r") as fp:
+        return json.load(fp)
+
+
 def main():
     start_execution_time = time.time()
 
     args = parse_command_prompt()
 
     h.create_folder_with_dialog(args.output)
+    paths = read_paths(args.input)
 
-    meshing_point_clouds(args.input, args.output)
+    meshing_point_clouds(paths, args.output)
 
     print("Total execution time: %f s" % (time.time() - start_execution_time))
 
