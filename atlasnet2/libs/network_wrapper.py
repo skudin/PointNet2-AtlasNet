@@ -16,7 +16,6 @@ from torch.utils.data import DataLoader
 from atlasnet2.datasets.dataset import Dataset
 from atlasnet2.networks.network import Network
 from atlasnet2.libs.helpers import AverageValueMeter
-import atlasnet2.libs.meshing as meshing
 
 import dist_chamfer
 import atlasnet2.configuration as conf
@@ -129,12 +128,18 @@ class NetworkWrapper:
 
         with torch.no_grad():
             for batch_num, batch_data in enumerate(self._test_data_loader, 1):
-                point_cloud, category, name = batch_data
+                if self._svr:
+                    image, point_cloud, category, name = batch_data
+                    network_input = image
+                else:
+                    point_cloud, category, name = batch_data
+                    network_input = point_cloud
+
                 category = category[0]
                 name = name[0]
 
                 reconstructed_point_cloud = self._scale_point_cloud(
-                    self._network.inference(point_cloud, self._num_points_gen))
+                    self._network.inference(network_input, self._num_points_gen))
                 point_cloud = self._scale_point_cloud(point_cloud)
 
                 dist_1, dist_2 = self._loss_func(point_cloud.cuda(), reconstructed_point_cloud)
@@ -176,20 +181,6 @@ class NetworkWrapper:
                                point_cloud=reconstructed_point_cloud.cpu().numpy().squeeze())
         self._save_item_metadata(item_path, category)
 
-        # if category == "wax_up":
-        #     if self._num_points_gen >= 10000:
-        #         margin_approx_points_number = 50
-        #     else:
-        #         margin_approx_points_number = 25
-        #     mesh = meshing.wax_up_meshing(point_cloud=reconstructed_point_cloud_np,
-        #                                   margin_approx_points_number=margin_approx_points_number)
-        # else:
-        #     mesh = meshing.meshing(reconstructed_point_cloud_np)
-        #
-        # o3d.io.write_triangle_mesh(
-        #     osp.join(self._result_path, "%s_output_mesh_%d_points.ply" % (name, self._num_points_gen)), mesh,
-        #     write_ascii=True, write_vertex_colors=False)
-
     def _get_data_loader(self, dataset_part: str = "test", gen_view: bool = False):
         logger.info("\nInitializing data loader. Mode: %s, dataset part: %s.\n" % (self._mode, dataset_part))
 
@@ -214,7 +205,7 @@ class NetworkWrapper:
             if dataset_part == "test":
                 return DataLoader(
                     dataset=Dataset(svr=self._svr, dataset_path=self._dataset_path, run_type="inference", mode="test",
-                                    num_points=self._num_points),
+                                    num_points=self._num_points, fixed_render_num=0),
                     batch_size=1,
                     shuffle=False,
                     num_workers=1

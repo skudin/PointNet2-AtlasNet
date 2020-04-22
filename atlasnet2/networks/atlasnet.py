@@ -194,10 +194,10 @@ class SVR(nn.Module):
 
         return self._decoder(x)
 
-    def inference(self, x, grid):
+    def inference(self, x, num_points=None, grid=None):
         x = self._encoder(x)
 
-        return self._decoder.inference(x, grid=grid)
+        return self._decoder.inference(x, num_points, grid)
 
     @property
     def encoder(self):
