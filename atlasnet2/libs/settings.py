@@ -7,7 +7,7 @@ import atlasnet2.libs.helpers as h
 
 
 class Settings:
-    def __init__(self, settings_type, mode):
+    def __init__(self, mode):
         self._common_params_filename = None
         self._training_params_filename = None
         self.snapshot = None
@@ -17,10 +17,10 @@ class Settings:
         self.output = None
         self.scaling = None
 
-        self._read_command_prompt_parser(settings_type, mode)
+        self._read_command_prompt_parser(mode)
         self._init_values()
 
-    def _read_command_prompt_parser(self, settings_type, mode):
+    def _read_command_prompt_parser(self, mode):
         parser = argparse.ArgumentParser()
 
         if mode == "train":
@@ -33,10 +33,8 @@ class Settings:
             parser.add_argument("-s", "--snapshot", required=True, choices=("latest", "best"), help="snapshot name")
             parser.add_argument("-i", "--input", required=True, type=str, help="input data for inference")
             parser.add_argument("-o", "--output", required=True, type=str, help="output folder")
+            parser.add_argument("-n", "--num_points_gen", type=int, help="number of points to generate")
             parser.add_argument("--scaling_fn", type=str, help="filename with information about scaling")
-
-            if settings_type == "ae":
-                parser.add_argument("-n", "--num_points_gen", type=int, help="number of points to generate")
 
         args = parser.parse_args()
 
@@ -51,9 +49,7 @@ class Settings:
             self.input = args.input
             self.output = args.output
             self.scaling_fn = args.scaling_fn
-
-            if settings_type == "ae":
-                self.num_points_gen = args.num_points_gen
+            self.num_points_gen = args.num_points_gen
 
     def _init_values(self):
         common_params = self._parse_params_file(self._common_params_filename)
