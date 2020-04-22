@@ -128,12 +128,18 @@ class NetworkWrapper:
 
         with torch.no_grad():
             for batch_num, batch_data in enumerate(self._test_data_loader, 1):
-                point_cloud, category, name = batch_data
+                if self._svr:
+                    image, point_cloud, category, name = batch_data
+                    network_input = image
+                else:
+                    point_cloud, category, name = batch_data
+                    network_input = point_cloud
+
                 category = category[0]
                 name = name[0]
 
                 reconstructed_point_cloud = self._scale_point_cloud(
-                    self._network.inference(point_cloud, self._num_points_gen))
+                    self._network.inference(network_input, self._num_points_gen))
                 point_cloud = self._scale_point_cloud(point_cloud)
 
                 dist_1, dist_2 = self._loss_func(point_cloud.cuda(), reconstructed_point_cloud)
