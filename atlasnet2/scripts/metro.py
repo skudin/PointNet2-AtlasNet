@@ -2,6 +2,7 @@ import argparse
 import os
 import os.path as osp
 import subprocess
+import time
 
 TIMEOUT = 60
 
@@ -48,6 +49,10 @@ def get_metro_distance(reference_filename, generated_filename):
 
 
 def get_avg_metro_distance(generated_path, reference_path):
+    item_counter = 0
+    avg_metro_distance = 0.0
+    total_calculation_time = 0.0
+
     for file_obj in os.listdir(generated_path):
         generated_filename = osp.join(generated_path, file_obj)
 
@@ -56,10 +61,18 @@ def get_avg_metro_distance(generated_path, reference_path):
 
         reference_filename = get_reference_filename(file_obj, reference_path)
 
-        metro_distance = get_metro_distance(reference_filename, generated_filename)
-        print("debug")
+        start_calculation_time = time.time()
 
-    pass
+        metro_distance = get_metro_distance(reference_filename, generated_filename)
+        avg_metro_distance += metro_distance
+
+        calculation_time = time.time() - start_calculation_time
+        total_calculation_time += calculation_time
+        item_counter += 1
+        print("Item %s is ready. Metro distance: %f. Calculation metric time: %f s" % (
+            file_obj, metro_distance, calculation_time))
+
+    return avg_metro_distance / item_counter
 
 
 def main():
