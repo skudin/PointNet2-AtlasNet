@@ -72,6 +72,8 @@ def get_avg_metro_distance(generated_path, reference_path):
         print("Item %s is ready. Metro distance: %f. Calculation metric time: %f s" % (
             file_obj, metro_distance, calculation_time))
 
+    print("Mean calculation metric time: %f s" % (total_calculation_time / item_counter))
+
     return avg_metro_distance / item_counter
 
 
@@ -80,7 +82,7 @@ def main():
 
     avg_metro_distance = get_avg_metro_distance(args.generated, args.reference)
 
-    print("Hello world!")
+    print("Avg metric: %s" % avg_metro_distance)
 
 
 if __name__ == "__main__":
