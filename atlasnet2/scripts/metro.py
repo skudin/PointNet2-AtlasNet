@@ -1,6 +1,9 @@
 import argparse
 import os
 import os.path as osp
+import subprocess
+
+TIMEOUT = 60
 
 
 def parse_command_prompt():
@@ -23,21 +26,25 @@ def get_reference_filename(generated_filename, reference_path):
             return file_obj_path
 
 
-def get_metro_distance():
-    # passed = False
-    # while not passed:
-    #     try:
-    #         ret = subprocess.run(
-    #             ["python3", "%s/atlasnet2/scripts/meshing_point_cloud.py" % conf.BASE_PATH, file_obj_path,
-    #              osp.join(output_dir, "%s.ply" % file_obj)], timeout=TIMEOUT)
-    #
-    #         if ret.returncode == 0:
-    #             passed = True
-    #         else:
-    #             print("Item was not passed. Retrying.")
-    #     except subprocess.TimeoutExpired:
-    #         print("Timeout. Retrying.")
-    pass
+def get_metro_distance(reference_filename, generated_filename):
+    passed = False
+    while not passed:
+        try:
+            ret = subprocess.run(["/metro/build/metro", reference_filename, generated_filename], timeout=TIMEOUT,
+                                 stdout=subprocess.PIPE)
+
+            if ret.returncode == 0:
+                passed = True
+
+                stdout = ret.stdout.decode("utf-8")
+                pos = stdout.find("Hausdorff")
+                value_str = stdout[pos: pos + 40]
+
+                return float(value_str.split(" ")[2])
+            else:
+                print("Item was not passed. Retrying.")
+        except subprocess.TimeoutExpired:
+            print("Timeout. Retrying.")
 
 
 def get_avg_metro_distance(generated_path, reference_path):
@@ -49,7 +56,8 @@ def get_avg_metro_distance(generated_path, reference_path):
 
         reference_filename = get_reference_filename(file_obj, reference_path)
 
-        metro_distance = get_metro_distance()
+        metro_distance = get_metro_distance(reference_filename, generated_filename)
+        print("debug")
 
     pass
 
