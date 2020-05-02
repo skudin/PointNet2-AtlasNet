@@ -4,6 +4,7 @@ import os.path as osp
 import subprocess
 import time
 import json
+import concurrent.futures as cf
 
 TIMEOUT = 60
 
@@ -17,8 +18,7 @@ def parse_command_prompt():
     return parser.parse_args()
 
 
-def get_reference_filename(generated_filename, reference_path):
-    item_name, _ = osp.splitext(generated_filename)
+def get_reference_filename(item_name, reference_path):
     reference_file_dir = osp.join(reference_path, item_name)
 
     for file_obj in os.listdir(reference_file_dir):
@@ -28,7 +28,9 @@ def get_reference_filename(generated_filename, reference_path):
             return file_obj_path
 
 
-def get_metro_distance(reference_filename, generated_filename):
+def get_metro_distance(item_name, reference_filename, generated_filename):
+    start_calculation_time = time.time()
+
     passed = False
     while not passed:
         try:
@@ -41,41 +43,64 @@ def get_metro_distance(reference_filename, generated_filename):
                 stdout = ret.stdout.decode("utf-8")
                 pos = stdout.find("Hausdorff")
                 value_str = stdout[pos: pos + 40]
-
-                return float(value_str.split(" ")[2])
+                metric_value = float(value_str.split(" ")[2])
             else:
                 print("Item was not passed. Retrying.")
         except subprocess.TimeoutExpired:
             print("Timeout. Retrying.")
 
+    calculation_time = time.time() - start_calculation_time
 
-def get_avg_metro_distance(generated_path, reference_path):
+    return item_name, metric_value, calculation_time
+
+
+def wait_futures(futures):
     item_counter = 0
     avg_metro_distance = 0.0
     total_calculation_time = 0.0
 
-    for file_obj in os.listdir(generated_path):
-        generated_filename = osp.join(generated_path, file_obj)
+    for future in cf.as_completed(futures):
+        error = future.exception()
 
-        if not osp.isfile(generated_filename) or not file_obj.endswith(".ply"):
-            continue
+        if error is not None:
+            raise error
 
-        reference_filename = get_reference_filename(file_obj, reference_path)
+        item_name, metric_value, calculation_time = future.result()
 
-        start_calculation_time = time.time()
-
-        metro_distance = get_metro_distance(reference_filename, generated_filename)
-        avg_metro_distance += metro_distance
-
-        calculation_time = time.time() - start_calculation_time
-        total_calculation_time += calculation_time
         item_counter += 1
+        avg_metro_distance += metric_value
+        total_calculation_time += calculation_time
+
         print("Item %s is ready. Metro distance: %f. Calculation metric time: %f s" % (
-            file_obj, metro_distance, calculation_time))
+        item_name, metric_value, calculation_time))
 
-    print("Mean calculation metric time: %f s" % (total_calculation_time / item_counter))
+    avg_metro_distance /= item_counter
+    avg_calculation_time = total_calculation_time / item_counter
 
-    return avg_metro_distance / item_counter
+    return avg_metro_distance, total_calculation_time, avg_calculation_time
+
+
+def get_avg_metro_distance(generated_path, reference_path):
+    with cf.ProcessPoolExecutor() as pool:
+        futures = set()
+        for file_obj in os.listdir(generated_path):
+            generated_filename = osp.join(generated_path, file_obj)
+
+            if not osp.isfile(generated_filename) or not file_obj.endswith(".ply"):
+                continue
+
+            item_name, _ = osp.splitext(file_obj)
+            reference_filename = get_reference_filename(item_name, reference_path)
+
+            futures.add(pool.submit(get_metro_distance, item_name, reference_filename, generated_filename))
+
+        avg_metro_distance, total_calculation_time, avg_calculation_time = wait_futures(futures)
+
+    print("Total time: %f s" % total_calculation_time)
+    print("Avg calculation metric time: %f" % avg_calculation_time)
+    print("Avg metro distance: %f" % avg_metro_distance)
+
+    return avg_metro_distance
 
 
 def write_result(output, metric_value):
@@ -89,7 +114,7 @@ def main():
     avg_metro_distance = get_avg_metro_distance(args.generated, args.reference)
     write_result(args.output, avg_metro_distance)
 
-    print("Avg metric: %s" % avg_metro_distance)
+    print("Done.")
 
 
 if __name__ == "__main__":
