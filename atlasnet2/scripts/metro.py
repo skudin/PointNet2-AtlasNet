@@ -3,6 +3,7 @@ import os
 import os.path as osp
 import subprocess
 import time
+import json
 
 TIMEOUT = 60
 
@@ -77,10 +78,16 @@ def get_avg_metro_distance(generated_path, reference_path):
     return avg_metro_distance / item_counter
 
 
+def write_result(output, metric_value):
+    with open(output, "w") as fp:
+        json.dump(dict(metro_distance=metric_value), fp=fp, indent=4)
+
+
 def main():
     args = parse_command_prompt()
 
     avg_metro_distance = get_avg_metro_distance(args.generated, args.reference)
+    write_result(args.output, avg_metro_distance)
 
     print("Avg metric: %s" % avg_metro_distance)
 
