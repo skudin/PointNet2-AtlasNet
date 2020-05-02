@@ -71,6 +71,13 @@ RUN cd /tmp/pointnet2_ext && \
     python3 setup.py build_ext --inplace && \
     pip3 install -e .
 
+# Metro distance.
+RUN mkdir /metro
+RUN cd /metro && \
+    git clone https://github.com/ThibaultGROUEIX/metro_sources.git . && \
+    git checkout 792cf7ca797b77890f60d439ca9cb72999892e58 && \
+    python3 setup.py --build
+
 # Create a working directory
 RUN mkdir /app
 WORKDIR /app
