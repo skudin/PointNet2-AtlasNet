@@ -74,8 +74,8 @@ def wait_futures(futures):
         avg_metro_distance += metric_value
         total_calculation_time += calculation_time
 
-        print("Item %s is ready. Metro distance: %f. Calculation metric time: %f s" % (
-        item_name, metric_value, calculation_time))
+        print("Item %s is ready (%d/%d). Metro distance: %f. Calculation metric time: %f s" % (
+            item_name, item_counter, len(futures), metric_value, calculation_time))
 
     avg_metro_distance /= item_counter
     avg_calculation_time = total_calculation_time / item_counter
