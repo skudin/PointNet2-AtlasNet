@@ -8,7 +8,7 @@ import concurrent.futures as cf
 
 import psutil
 
-TIMEOUT = 60
+TIMEOUT = 60 * 5
 
 
 def parse_command_prompt():
