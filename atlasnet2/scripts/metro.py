@@ -6,6 +6,8 @@ import time
 import json
 import concurrent.futures as cf
 
+import psutil
+
 TIMEOUT = 60
 
 
@@ -81,7 +83,7 @@ def wait_futures(futures):
 
 
 def get_avg_metro_distance(generated_path, reference_path):
-    with cf.ProcessPoolExecutor() as pool:
+    with cf.ProcessPoolExecutor(max_workers=psutil.cpu_count(logical=False)) as pool:
         futures = set()
         for file_obj in os.listdir(generated_path):
             generated_filename = osp.join(generated_path, file_obj)
