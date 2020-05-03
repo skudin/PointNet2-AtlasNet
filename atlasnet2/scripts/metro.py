@@ -130,7 +130,7 @@ def main():
             print("Getting average metro distance for %s has started." % task_name)
 
             avg_metro_distance = get_avg_metro_distance(path, args.reference)
-            write_result(osp.join(args.output, task_name), avg_metro_distance)
+            write_result(osp.join(args.output, "%s.json" % task_name), avg_metro_distance)
         pass
 
     print("Done.")
