@@ -15,6 +15,7 @@ def parse_command_prompt():
     parser = argparse.ArgumentParser()
     parser.add_argument("--reference", required=True, help="path to reference data")
     parser.add_argument("--generated", required=True, help="path to generated data")
+    parser.add_argument("--generated_type", required=True, choices=("path", "json"), help="type of generated option")
     parser.add_argument("--output", required=True, help="output filename")
 
     return parser.parse_args()
@@ -110,11 +111,27 @@ def write_result(output, metric_value):
         json.dump(dict(metro_distance=metric_value), fp=fp, indent=4)
 
 
+def read_paths(filename):
+    with open(filename, "r") as fp:
+        return json.load(fp)
+
+
 def main():
     args = parse_command_prompt()
 
-    avg_metro_distance = get_avg_metro_distance(args.generated, args.reference)
-    write_result(args.output, avg_metro_distance)
+    if args.generated_type == "path":
+        avg_metro_distance = get_avg_metro_distance(args.generated, args.reference)
+        write_result(args.output, avg_metro_distance)
+    else:
+        paths = read_paths(args.generated)
+
+        for path in paths:
+            _, task_name = osp.split(path)
+            print("Getting average metro distance for %s has started." % task_name)
+
+            avg_metro_distance = get_avg_metro_distance(path, args.reference)
+            write_result(osp.join(args.output, task_name), avg_metro_distance)
+        pass
 
     print("Done.")
 
