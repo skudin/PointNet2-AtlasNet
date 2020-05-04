@@ -40,6 +40,7 @@ def get_items(path):
 def get_avg_emd(path):
     items = get_items(path)
     avg_emd = 0.0
+    total_time = 0.0
 
     for num, item in enumerate(items, 1):
         start_calculation_time = time.time()
@@ -54,8 +55,13 @@ def get_avg_emd(path):
         avg_emd += metric_value / len(items)
 
         calculation_time = time.time() - start_calculation_time
+        total_time += calculation_time
         print("Item %s is ready (%d/%d). EMD: %f. Calculation metric time: %f s" % (
             item["name"], num, len(items), metric_value, calculation_time))
+
+    print("Total calculation time: %f s" % total_time)
+    print("Avg calculation time: %f s" % (total_time / len(items)))
+    print("Avg EMD: %f" % avg_emd)
 
     return avg_emd
 
@@ -65,13 +71,26 @@ def save_result(filename, avg_emd):
         json.dump(dict(avg_emd=avg_emd), fp=fp, indent=4)
 
 
+def read_paths(filename):
+    with open(filename, "r") as fp:
+        return json.load(fp)
+
+
 def main():
     args = parse_command_prompt()
 
-    avg_emd = get_avg_emd(args.input)
-    save_result(args.output, avg_emd)
+    if osp.isfile(args.input):
+        paths = read_paths(args.input)
 
-    print("Avg EMD: %f" % avg_emd)
+        for path in paths:
+            _, task_name = osp.split(path)
+            print("Getting average EMD for %s has started." % task_name)
+
+            avg_emd = get_avg_emd(path)
+            save_result(osp.join(args.output, "%s.json" % task_name), avg_emd)
+    else:
+        avg_emd = get_avg_emd(args.input)
+        save_result(args.output, avg_emd)
 
     print("Done.")
 
