@@ -1,6 +1,7 @@
 import argparse
 import os
 import os.path as osp
+import time
 
 import open3d as o3d
 import numpy as np
@@ -26,6 +27,8 @@ def get_avg_emd(path):
         if not osp.isdir(file_obj_path):
             continue
 
+        start_calculation_time = time.time()
+
         input_point_cloud = torch.from_numpy(
             np.asarray(o3d.io.read_point_cloud(osp.join(file_obj_path, "input_point_cloud.ply")).points)[
                 np.newaxis, ...]).cuda()
@@ -37,6 +40,10 @@ def get_avg_emd(path):
 
         avg_emd += metric_value
         counter += 1
+
+        calculation_time = time.time() - start_calculation_time
+
+        print("Item %s is ready. EMD: %f. Calculation metric time: %f s" % (file_obj, metric_value, calculation_time))
 
     return avg_emd / counter
 
