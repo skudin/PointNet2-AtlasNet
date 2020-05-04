@@ -60,6 +60,8 @@ RUN pip3 install https://download.pytorch.org/whl/cu100/torch-1.1.0-cp36-cp36m-l
 COPY requirements.txt /tmp/requirements.txt
 RUN pip3 install -r /tmp/requirements.txt
 
+RUN mkdir /deps
+
 # Install additional packages.
 COPY packages/chamfer /tmp/chamfer
 RUN cd /tmp/chamfer && \
@@ -77,6 +79,14 @@ RUN cd /metro && \
     git clone https://github.com/ThibaultGROUEIX/metro_sources.git . && \
     git checkout 792cf7ca797b77890f60d439ca9cb72999892e58 && \
     python3 setup.py --build
+
+# Earth-Mover-Distance
+RUN mkdir /deps/emd
+RUN cd /deps/emd && \
+    git clone https://github.com/daerduoCarey/PyTorchEMD.git . && \
+    git checkout e5c0feb8c15741a858362f9c397d9ed4b8b1752b && \
+    python3 setup.py build_ext --inplace && \
+    pip3 install -e .
 
 # Create a working directory
 RUN mkdir /app
