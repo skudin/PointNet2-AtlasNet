@@ -2,6 +2,7 @@ import argparse
 import os
 import os.path as osp
 import time
+import json
 
 import open3d as o3d
 import numpy as np
@@ -11,8 +12,9 @@ from emd import earth_mover_distance
 
 def parse_command_prompt():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", required=True, help="path to inference results")
-    parser.add_argument("--output", required=True, help="output filename")
+    parser.add_argument("--input", required=True,
+                        help="path to inference results or file with list of paths inferences results")
+    parser.add_argument("--output", required=True, help="output filename or output dir")
 
     return parser.parse_args()
 
@@ -58,10 +60,16 @@ def get_avg_emd(path):
     return avg_emd
 
 
+def save_result(filename, avg_emd):
+    with open(filename, "w") as fp:
+        json.dump(dict(avg_emd=avg_emd), fp=fp, indent=4)
+
+
 def main():
     args = parse_command_prompt()
 
     avg_emd = get_avg_emd(args.input)
+    save_result(args.output, avg_emd)
 
     print("Avg EMD: %f" % avg_emd)
 
