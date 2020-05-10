@@ -3,7 +3,7 @@ import json
 import shutil
 import os
 
-import atlasnet2.libs.helpers as h
+import pointnet2_atlasnet.libs.helpers as h
 
 
 class Settings:

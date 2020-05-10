@@ -4,7 +4,7 @@ import os.path as osp
 import time
 import copy
 import json
-from typing import Optional
+from typing import Optional, Union, List
 from collections import namedtuple
 from operator import itemgetter
 
@@ -13,13 +13,13 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
-from atlasnet2.datasets.dataset import Dataset
-from atlasnet2.networks.network import Network
-from atlasnet2.libs.helpers import AverageValueMeter
+from pointnet2_atlasnet.datasets.dataset import Dataset
+from pointnet2_atlasnet.networks.network import Network
+from pointnet2_atlasnet.libs.helpers import AverageValueMeter
 
 import dist_chamfer
-import atlasnet2.configuration as conf
-from atlasnet2.libs.visdom_wrapper import VisdomWrapper
+import pointnet2_atlasnet.configuration as conf
+from pointnet2_atlasnet.libs.visdom_wrapper import VisdomWrapper
 
 
 logger = logging.getLogger(__name__)
@@ -32,7 +32,8 @@ class NetworkWrapper:
                  pretrained_ae: Optional[str] = None,
                  num_points: int = 2500,
                  num_primitives: int = 1, bottleneck_size: int = 1024, learning_rate: float = 0.001,
-                 epoch_num_reset_optimizer: int = 1000, multiplier_learning_rate: float = 0.1,
+                 epoch_num_reset_optimizer: Union[int, List[int]] = 1000,
+                 multiplier_learning_rate: Union[float, List[float]] = 0.1,
                  result_path: Optional[str] = None, snapshot: Optional[str] = None,
                  num_points_gen: Optional[int] = None, scaling_fn: Optional[str] = None):
         self._svr = svr
@@ -47,7 +48,14 @@ class NetworkWrapper:
         self._num_primitives = num_primitives
         self._learning_rate = learning_rate
         self._epoch_num_reset_optimizer = epoch_num_reset_optimizer
+
+        if isinstance(self._epoch_num_reset_optimizer, int):
+            self._epoch_num_reset_optimizer = (self._epoch_num_reset_optimizer, )
         self._multiplier_learning_rate = multiplier_learning_rate
+        if isinstance(self._multiplier_learning_rate, float):
+            self._multiplier_learning_rate = (self._multiplier_learning_rate, )
+        assert len(self._epoch_num_reset_optimizer) == len(self._multiplier_learning_rate)
+
         self._result_path = result_path
         self._snapshot = snapshot
 
@@ -237,6 +245,7 @@ class NetworkWrapper:
             else:
                 point_clouds, *_ = batch_data
                 network_input = point_clouds
+                image = None
 
             reconstructed_point_clouds = self._network.forward(network_input)
 
@@ -373,7 +382,7 @@ class NetworkWrapper:
             "num_points_gen": self._num_points_gen,
             "scaling": self._scaling_coeffs._asdict() if self._scaling_coeffs is not None else None,
             "avg_chamfer_loss": self._test_loss.avg,
-            "losses_raiting": losses_rating
+            "losses_rating": losses_rating
         }
         
         logger.info("Saving test metadata to %s" % filename)

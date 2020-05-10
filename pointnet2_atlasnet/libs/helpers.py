@@ -8,8 +8,8 @@ from typing import Union
 import numpy as np
 import torch
 
-import atlasnet2.configuration as conf
-from atlasnet2.libs.visdom_wrapper import VisdomWrapper
+import pointnet2_atlasnet.configuration as conf
+from pointnet2_atlasnet.libs.visdom_wrapper import VisdomWrapper
 
 
 def get_path_to_experiments_folder():
@@ -71,7 +71,9 @@ def weights_init(m):
 
 class AverageValueMeter:
     def __init__(self):
-        self.reset()
+        self._sum = 0.0
+        self._count = 0
+        self._avg = 0.0
 
     def reset(self):
         self._sum = 0.0

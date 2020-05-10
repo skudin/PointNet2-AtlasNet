@@ -3,8 +3,8 @@ from typing import Optional
 import torch
 import torch.nn as nn
 
-import atlasnet2.networks.atlasnet as atlasnet
-import atlasnet2.networks.pointnet2 as pointnet2
+import pointnet2_atlasnet.networks.atlasnet as atlasnet
+import pointnet2_atlasnet.networks.pointnet2 as pointnet2
 
 
 class Autoencoder(nn.Module):

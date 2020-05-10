@@ -5,7 +5,7 @@ import numpy as np
 import open3d as o3d
 from matplotlib import pyplot as plt
 
-import atlasnet2.configuration as conf
+import pointnet2_atlasnet.configuration as conf
 
 
 MAX_MIN_VALUE = 1e5
@@ -41,6 +41,7 @@ class AxisAlignedBoundingBox:
         for i in range(6):
             distances[i] = self._planes[i].distance_to_point(point)
 
+        # noinspection PyTypeChecker
         return self._planes[np.argmin(distances)]
 
     def _create_planes(self, point, point_type):
@@ -224,7 +225,8 @@ def cut_mesh(mesh, mesh_points_proj, margin):
 
 
 def create_mesh(point_cloud, margin_approx_points_number=25, depth=9, scale=1.1, output_dir=None):
-    mesh, _ = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(point_cloud, depth=depth, scale=scale)
+    # noinspection PyArgumentList
+    mesh, _ = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(pcd=point_cloud, depth=depth, scale=scale)
 
     point_cloud_proj = get_cylindrical_projection(point_cloud.points)
     mesh_points_proj = get_cylindrical_projection(mesh.vertices)
@@ -275,6 +277,7 @@ def meshing(point_cloud, radius=0.5, max_nn=30, depth=9, scale=1.1, output_dir=N
     if output_dir is not None:
         o3d.io.write_point_cloud(osp.join(output_dir, "point_cloud_with_normals.ply"), pcd)
 
+    # noinspection PyArgumentList
     mesh, _ = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(pcd=pcd, depth=depth, scale=scale)
 
     if output_dir is not None:

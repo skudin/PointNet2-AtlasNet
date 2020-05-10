@@ -1,4 +1,3 @@
-import sys
 from typing import Tuple, List, Any, AnyStr
 
 import torch

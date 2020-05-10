@@ -4,9 +4,9 @@ from typing import Optional
 import torch
 import torch.optim as optim
 
-from atlasnet2.networks.autoencoder import Autoencoder
-from atlasnet2.networks.atlasnet import SVR
-import atlasnet2.libs.helpers as h
+from pointnet2_atlasnet.networks.autoencoder import Autoencoder
+from pointnet2_atlasnet.networks.atlasnet import SVR
+import pointnet2_atlasnet.libs.helpers as h
 
 
 logger = logging.getLogger(__name__)
@@ -87,7 +87,5 @@ class Network:
         torch.save(self._network.state_dict(), path)
 
     def load_snapshot(self, snapshot: str):
-        tmp = torch.load(snapshot)
-        tmp_2 = self._network.state_dict()
         self._network.load_state_dict(torch.load(snapshot))
         logger.info("Snapshot %s loaded!" % snapshot)

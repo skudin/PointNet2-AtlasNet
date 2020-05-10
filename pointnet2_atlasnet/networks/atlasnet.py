@@ -64,9 +64,9 @@ class PointNetFeat(nn.Module):
     def forward(self, x):
         if self._trans:
             trans = self._stn(x)
-            x = x.transpose(2,1)
+            x = x.transpose(2, 1)
             x = torch.bmm(x, trans)
-            x = x.transpose(2,1)
+            x = x.transpose(2, 1)
 
         x = F.relu(self._bn_1(self._conv_1(x)))
         point_feat = x
@@ -137,7 +137,7 @@ class Decoder(nn.Module):
         self._bottleneck_size = bottleneck_size
 
         self._decoder = nn.ModuleList(
-            [PointGenCon(bottleneck_size=2 + self._bottleneck_size) for i in range(0, self._num_primitives)])
+            [PointGenCon(bottleneck_size=2 + self._bottleneck_size) for _ in range(0, self._num_primitives)])
 
     def forward(self, x):
         outs = []
