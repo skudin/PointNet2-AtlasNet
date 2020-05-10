@@ -37,7 +37,7 @@ def get_metro_distance(item_name, reference_filename, generated_filename):
     passed = False
     while not passed:
         try:
-            ret = subprocess.run(["/metro/build/metro", reference_filename, generated_filename], timeout=TIMEOUT,
+            ret = subprocess.run(["/deps/metro/build/metro", reference_filename, generated_filename], timeout=TIMEOUT,
                                  stdout=subprocess.PIPE)
 
             if ret.returncode == 0:

@@ -63,19 +63,19 @@ RUN pip3 install -r /tmp/requirements.txt
 RUN mkdir /deps
 
 # Install additional packages.
-COPY packages/chamfer /tmp/chamfer
-RUN cd /tmp/chamfer && \
+COPY packages/chamfer /deps/chamfer
+RUN cd /deps/chamfer && \
     python3 setup.py build_ext --inplace && \
     pip3 install -e .
 
-COPY packages/pointnet2_ext /tmp/pointnet2_ext
-RUN cd /tmp/pointnet2_ext && \
+COPY packages/pointnet2_ext /deps/pointnet2_ext
+RUN cd /deps/pointnet2_ext && \
     python3 setup.py build_ext --inplace && \
     pip3 install -e .
 
 # Metro distance.
-RUN mkdir /metro
-RUN cd /metro && \
+RUN mkdir /deps/metro
+RUN cd /deps/metro && \
     git clone https://github.com/ThibaultGROUEIX/metro_sources.git . && \
     git checkout 792cf7ca797b77890f60d439ca9cb72999892e58 && \
     python3 setup.py --build
