@@ -8,8 +8,8 @@ from typing import Union
 import numpy as np
 import torch
 
-import atlasnet2.configuration as conf
-from atlasnet2.libs.visdom_wrapper import VisdomWrapper
+import pointnet2_atlasnet.configuration as conf
+from pointnet2_atlasnet.libs.visdom_wrapper import VisdomWrapper
 
 
 def get_path_to_experiments_folder():

@@ -4,9 +4,9 @@ from typing import Optional
 import torch
 import torch.optim as optim
 
-from atlasnet2.networks.autoencoder import Autoencoder
-from atlasnet2.networks.atlasnet import SVR
-import atlasnet2.libs.helpers as h
+from pointnet2_atlasnet.networks.autoencoder import Autoencoder
+from pointnet2_atlasnet.networks.atlasnet import SVR
+import pointnet2_atlasnet.libs.helpers as h
 
 
 logger = logging.getLogger(__name__)

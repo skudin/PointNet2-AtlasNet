@@ -11,7 +11,7 @@ import torchvision.transforms as transforms
 import numpy as np
 from PIL import Image
 
-import atlasnet2.configuration as conf
+import pointnet2_atlasnet.configuration as conf
 
 
 logger = logging.getLogger(__name__)

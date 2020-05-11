@@ -5,7 +5,7 @@ import numpy as np
 import open3d as o3d
 from matplotlib import pyplot as plt
 
-import atlasnet2.configuration as conf
+import pointnet2_atlasnet.configuration as conf
 
 
 MAX_MIN_VALUE = 1e5

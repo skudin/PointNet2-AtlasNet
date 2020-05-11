@@ -210,7 +210,7 @@ dmypy.json
 
 # Custom.
 .idea
-!atlasnet2/scripts
+!pointnet2_atlasnet/scripts
 !packages/pointnet2_ext/include
 /.project
 data/shapenet/shapenet_tiny

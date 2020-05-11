@@ -13,13 +13,13 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
-from atlasnet2.datasets.dataset import Dataset
-from atlasnet2.networks.network import Network
-from atlasnet2.libs.helpers import AverageValueMeter
+from pointnet2_atlasnet.datasets.dataset import Dataset
+from pointnet2_atlasnet.networks.network import Network
+from pointnet2_atlasnet.libs.helpers import AverageValueMeter
 
 import dist_chamfer
-import atlasnet2.configuration as conf
-from atlasnet2.libs.visdom_wrapper import VisdomWrapper
+import pointnet2_atlasnet.configuration as conf
+from pointnet2_atlasnet.libs.visdom_wrapper import VisdomWrapper
 
 
 logger = logging.getLogger(__name__)
