@@ -1,5 +1,7 @@
 import random
 
+# For fix SIGSEGV.
+import open3d
 import numpy as np
 import torch
 
@@ -16,7 +18,7 @@ def set_random_seed():
 
 
 def main():
-    settings = Settings("ae", "train")
+    settings = Settings("train")
 
     experiment_path, snapshots_path, logger, vis = h.init_train(settings)
 
