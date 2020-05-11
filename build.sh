@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 current_uid=`id -u`
 current_gid=`id -g`
-docker build -t atlasnet2 --build-arg uid=${current_uid} --build-arg gid=${current_gid} -f Dockerfile .
+nvidia-docker build -t atlasnet2 --build-arg uid=${current_uid} --build-arg gid=${current_gid} -f Dockerfile .
