@@ -1,10 +1,13 @@
+# For fix SIGSEGV.
+import open3d
+
 import atlasnet2.libs.helpers as h
 from atlasnet2.libs.settings import Settings
 from atlasnet2.libs.network_wrapper import NetworkWrapper
 
 
 def main():
-    settings = Settings("svr", "train")
+    settings = Settings("train")
 
     experiment_path, snapshots_path, logger, vis = h.init_train(settings)
 
