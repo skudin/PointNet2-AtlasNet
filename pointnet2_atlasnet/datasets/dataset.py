@@ -13,14 +13,14 @@ from PIL import Image
 
 import pointnet2_atlasnet.configuration as conf
 
-
 logger = logging.getLogger(__name__)
 
 
 class Dataset(data.Dataset):
     def __init__(self, svr: bool = False,
                  dataset_path: str = os.path.join(conf.BASE_PATH, "data", "shapenet_tiny", "dataset"),
-                 run_type: str = "train", mode: str = "train", num_points: int = 2500, include_normals: bool = False, gen_view: bool = False,
+                 run_type: str = "train", mode: str = "train", num_points: int = 2500, include_normals: bool = False,
+                 gen_view: bool = False,
                  fixed_render_num: Optional[int] = None):
         self._svr = svr
         self._dataset_path = dataset_path
@@ -65,11 +65,11 @@ class Dataset(data.Dataset):
             image = Image.open(os.path.join(render_path))
 
             if self._mode == "train":
-                image = self._data_augmentation(image) # random crop
+                image = self._data_augmentation(image)  # random crop
             else:
-                image = self._validating_transform(image) # center crop
+                image = self._validating_transform(image)  # center crop
 
-            image = self._finish_transforms(image) # scale and to tensor
+            image = self._finish_transforms(image)  # scale and to tensor
             image = image[: 3]
 
             return image, point_cloud, item.category, item.name
