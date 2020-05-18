@@ -71,7 +71,9 @@ def weights_init(m):
 
 class AverageValueMeter:
     def __init__(self):
-        self.reset()
+        self._sum = 0.0
+        self._count = 0
+        self._avg = 0.0
 
     def reset(self):
         self._sum = 0.0
