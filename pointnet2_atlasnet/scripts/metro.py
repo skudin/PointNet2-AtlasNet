@@ -5,6 +5,7 @@ import subprocess
 import time
 import json
 import concurrent.futures as cf
+from operator import itemgetter
 
 import psutil
 
@@ -61,6 +62,7 @@ def wait_futures(futures):
     item_counter = 0
     avg_metro_distance = 0.0
     total_calculation_time = 0.0
+    rating = list()
 
     for future in cf.as_completed(futures):
         error = future.exception()
@@ -73,14 +75,19 @@ def wait_futures(futures):
         item_counter += 1
         avg_metro_distance += metric_value
         total_calculation_time += calculation_time
+        rating.append({
+            "name": item_name,
+            "distance": metric_value
+        })
 
         print("Item %s is ready (%d/%d). Metro distance: %f. Calculation metric time: %f s" % (
             item_name, item_counter, len(futures), metric_value, calculation_time))
 
     avg_metro_distance /= item_counter
     avg_calculation_time = total_calculation_time / item_counter
+    rating.sort(key=itemgetter("distance"), reverse=True)
 
-    return avg_metro_distance, total_calculation_time, avg_calculation_time
+    return avg_metro_distance, total_calculation_time, avg_calculation_time, rating
 
 
 def get_avg_metro_distance(generated_path, reference_path):
@@ -97,18 +104,18 @@ def get_avg_metro_distance(generated_path, reference_path):
 
             futures.add(pool.submit(get_metro_distance, item_name, reference_filename, generated_filename))
 
-        avg_metro_distance, total_calculation_time, avg_calculation_time = wait_futures(futures)
+        avg_metro_distance, total_calculation_time, avg_calculation_time, rating = wait_futures(futures)
 
     print("Total time: %f s" % total_calculation_time)
     print("Avg calculation metric time: %f" % avg_calculation_time)
     print("Avg metro distance: %f" % avg_metro_distance)
 
-    return avg_metro_distance
+    return avg_metro_distance, rating
 
 
-def write_result(output, metric_value):
+def write_result(output, metric_value, rating):
     with open(output, "w") as fp:
-        json.dump(dict(metro_distance=metric_value), fp=fp, indent=4)
+        json.dump(dict(metro_distance=metric_value, rating=rating), fp=fp, indent=4)
 
 
 def read_paths(filename):
@@ -120,8 +127,8 @@ def main():
     args = parse_command_prompt()
 
     if osp.isdir(args.generated):
-        avg_metro_distance = get_avg_metro_distance(args.generated, args.reference)
-        write_result(args.output, avg_metro_distance)
+        avg_metro_distance, rating = get_avg_metro_distance(args.generated, args.reference)
+        write_result(args.output, avg_metro_distance, rating)
     else:
         paths = read_paths(args.generated)
 
@@ -129,8 +136,8 @@ def main():
             _, task_name = osp.split(path)
             print("Getting average metro distance for %s has started." % task_name)
 
-            avg_metro_distance = get_avg_metro_distance(path, args.reference)
-            write_result(osp.join(args.output, "%s.json" % task_name), avg_metro_distance)
+            avg_metro_distance, rating = get_avg_metro_distance(path, args.reference)
+            write_result(osp.join(args.output, "%s.json" % task_name), avg_metro_distance, rating)
 
     print("Done.")
 
