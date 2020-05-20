@@ -15,8 +15,9 @@ TIMEOUT = 60 * 5
 def parse_command_prompt():
     parser = argparse.ArgumentParser()
     parser.add_argument("--reference", required=True, help="path to reference data")
-    parser.add_argument("--generated", required=True, help="path to generated data")
-    parser.add_argument("--output", required=True, help="output filename")
+    parser.add_argument("--generated", required=True,
+                        help="path to generated data or path filename with paths to generated data")
+    parser.add_argument("--output", required=True, help="output filename or output dir")
 
     return parser.parse_args()
 
@@ -130,6 +131,7 @@ def main():
         avg_metro_distance, rating = get_avg_metro_distance(args.generated, args.reference)
         write_result(args.output, avg_metro_distance, rating)
     else:
+        os.makedirs(args.output)
         paths = read_paths(args.generated)
 
         for path in paths:
