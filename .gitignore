@@ -210,15 +210,10 @@ dmypy.json
 
 # Custom.
 .idea
-!pointnet2_atlasnet/scripts
-!packages/pointnet2_ext/include
 /.project
 data/shapenet/shapenet_tiny
-data/shapenet/shapenet_tiny_test
-data/36_wax_up
-data/36_wax_up_tiny
-data/tmp
-experiments
-data/debug_meshing
 data/36_wax_ups
-data/ae_inference
+data/36_wax_ups_tiny
+experiments
+!packages/pointnet2_ext/include
+!pointnet2_atlasnet/scripts
