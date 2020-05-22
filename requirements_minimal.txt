@@ -5,3 +5,4 @@ open3d==0.9.0.0
 matplotlib==3.2.1
 numpy==1.18.4
 psutil==5.7.0
+seaborn==0.10.1
