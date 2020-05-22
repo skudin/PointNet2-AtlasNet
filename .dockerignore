@@ -1,5 +1,8 @@
 data/36_wax_ups
+data/36_wax_ups_tiny
 data/shapenet/dataset
 data/shapenet/raw_dataset/customShapeNet
 data/shapenet/raw_dataset/ShapeNet
 data/shapenet/raw_dataset/ShapeNetCorev2Normalized
+data/shapenet/shapenet_tiny
+data/shapenet_tiny
