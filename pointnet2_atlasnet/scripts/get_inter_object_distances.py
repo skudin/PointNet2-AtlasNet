@@ -2,6 +2,7 @@ import argparse
 import os
 import os.path as osp
 import time
+import json
 
 import numpy as np
 import open3d as o3d
@@ -78,13 +79,22 @@ def get_distances(index, data_type):
     return distances
 
 
+def save_result(output, distances):
+    output_dir = osp.split(output)[0]
+    os.makedirs(output_dir, exist_ok=True)
+
+    with open(output, "w") as fp:
+        json.dump(distances, fp=fp)
+
+
 def main():
     args = parse_command_prompt()
 
     index = index_dir(args.input, args.data_type)
     distances = get_distances(index, args.data_type)
+    save_result(args.output, distances)
 
-    print("Hello world!")
+    print("Done.")
 
 
 if __name__ == "__main__":
