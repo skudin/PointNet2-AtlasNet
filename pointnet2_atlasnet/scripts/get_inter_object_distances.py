@@ -23,8 +23,8 @@ def parse_command_prompt():
     return parser.parse_args()
 
 
-def index_dir(path, data_type):
-    index = list()
+def read_point_clouds(path, data_type):
+    point_clouds = list()
     for file_obj in os.listdir(path):
         file_obj_path = osp.join(path, file_obj)
 
@@ -32,13 +32,13 @@ def index_dir(path, data_type):
             continue
 
         if data_type == "dataset":
-            point_cloud_filename = osp.join(file_obj_path, "point_cloud.npy")
+            point_cloud = np.load(osp.join(file_obj_path, "point_cloud.npy"))
         else:
-            point_cloud_filename = osp.join(file_obj_path, "output_point_cloud.ply")
+            point_cloud = np.asarray(o3d.io.read_point_cloud(osp.join(file_obj_path, "output_point_cloud.ply")).points)
 
-        index.append(point_cloud_filename)
+        point_clouds.append(torch.from_numpy(point_cloud[np.newaxis, ...]).cuda())
 
-    return index
+    return point_clouds
 
 
 def read_point_cloud(filename, data_type):
@@ -50,22 +50,22 @@ def read_point_cloud(filename, data_type):
     return torch.from_numpy(point_cloud[np.newaxis, ...]).cuda()
 
 
-def get_distances(index, data_type):
+def get_distances(point_clouds):
     distances = []
     chamfer_dist = dist_chamfer.chamferDist()
     counter = 0
-    amount_iterations = (len(index) ** 2 - len(index)) // 2
+    amount_iterations = (len(point_clouds) ** 2 - len(point_clouds)) // 2
     avg_time = h.AverageValueMeter()
 
     start_time = time.time()
 
-    for i in range(len(index)):
-        first_point_cloud = read_point_cloud(index[i], data_type)
+    for i in range(len(point_clouds)):
+        first_point_cloud = point_clouds[i]
 
-        for j in range(i + 1, len(index)):
+        for j in range(i + 1, len(point_clouds)):
             start_iter_time = time.time()
 
-            second_point_cloud = read_point_cloud(index[j], data_type)
+            second_point_cloud = point_clouds[j]
 
             dist_1, dist_2 = chamfer_dist(first_point_cloud, second_point_cloud)
             dist = (torch.mean(dist_1) + torch.mean(dist_2)).item()
@@ -98,8 +98,8 @@ def save_result(output, distances):
 def main():
     args = parse_command_prompt()
 
-    index = index_dir(args.input, args.data_type)
-    distances = get_distances(index, args.data_type)
+    point_clouds = read_point_clouds(args.input, args.data_type)
+    distances = get_distances(point_clouds)
     save_result(args.output, distances)
 
     print("Done.")
