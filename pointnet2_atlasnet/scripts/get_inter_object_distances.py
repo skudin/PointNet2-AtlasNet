@@ -41,6 +41,15 @@ def index_dir(path, data_type):
     return index
 
 
+def read_point_cloud(filename, data_type):
+    if data_type == "dataset":
+        point_cloud = np.load(filename)
+    else:
+        point_cloud = np.asarray(o3d.io.read_point_cloud(filename).points)
+
+    return torch.from_numpy(point_cloud[np.newaxis, ...]).cuda()
+
+
 def get_distances(index, data_type):
     distances = []
     chamfer_dist = dist_chamfer.chamferDist()
@@ -48,19 +57,15 @@ def get_distances(index, data_type):
     amount_iterations = (len(index) ** 2 - len(index)) // 2
     avg_time = h.AverageValueMeter()
 
+    start_time = time.time()
+
     for i in range(len(index)):
+        first_point_cloud = read_point_cloud(index[i], data_type)
+
         for j in range(i + 1, len(index)):
-            start_time = time.time()
+            start_iter_time = time.time()
 
-            if data_type == "dataset":
-                first_point_cloud = np.load(index[i])
-                second_point_cloud = np.load(index[j])
-            else:
-                first_point_cloud = np.asarray(o3d.io.read_point_cloud(index[i]).points)
-                second_point_cloud = np.asarray(o3d.io.read_point_cloud(index[j]).points)
-
-            first_point_cloud = torch.from_numpy(first_point_cloud[np.newaxis, ...]).cuda()
-            second_point_cloud = torch.from_numpy(second_point_cloud[np.newaxis, ...]).cuda()
+            second_point_cloud = read_point_cloud(index[j], data_type)
 
             dist_1, dist_2 = chamfer_dist(first_point_cloud, second_point_cloud)
             dist = (torch.mean(dist_1) + torch.mean(dist_2)).item()
@@ -68,13 +73,16 @@ def get_distances(index, data_type):
             distances.append(dist)
 
             counter += 1
-            calculation_time = time.time() - start_time
-            avg_time.update(calculation_time)
+            calculation_iter_time = time.time() - start_iter_time
+            avg_time.update(calculation_iter_time)
             print(
                 "Dist between %d and %d is ready (%d/%d). Chamfer distance: %f. Calculation metric time: %f s" % (
-                    i, j, counter, amount_iterations, dist, calculation_time))
+                    i, j, counter, amount_iterations, dist, calculation_iter_time))
+
+    total_time = time.time() - start_time
 
     print("Avg iteration time: %f s" % avg_time.avg)
+    print("Total time: %f s" % total_time)
 
     return distances
 
