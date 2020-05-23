@@ -15,10 +15,10 @@ import pointnet2_atlasnet.libs.helpers as h
 
 def parse_command_prompt():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", required=True, help="path to input data")
-    parser.add_argument("--data_type", required=True, choices=("dataset", "inference_output"),
+    parser.add_argument("--input", required=True, help="path to input data or file with configuration for all paths")
+    parser.add_argument("--data_type", choices=("dataset", "inference_input", "inference_output"),
                         help="type of input data")
-    parser.add_argument("--output", required=True, help="output filename")
+    parser.add_argument("--output", required=True, help="output filename or output directory")
 
     return parser.parse_args()
 
@@ -32,22 +32,17 @@ def read_point_clouds(path, data_type):
             continue
 
         if data_type == "dataset":
-            point_cloud = np.load(osp.join(file_obj_path, "point_cloud.npy"))
+            point_cloud = np.load(osp.join(file_obj_path, "point_cloud.npy")).astype(np.float32)
+        elif data_type == "inference_input":
+            point_cloud = np.asarray(
+                o3d.io.read_point_cloud(osp.join(file_obj_path, "input_point_cloud.ply")).points).astype(np.float32)
         else:
-            point_cloud = np.asarray(o3d.io.read_point_cloud(osp.join(file_obj_path, "output_point_cloud.ply")).points)
+            point_cloud = np.asarray(
+                o3d.io.read_point_cloud(osp.join(file_obj_path, "output_point_cloud.ply")).points).astype(np.float32)
 
         point_clouds.append(torch.from_numpy(point_cloud[np.newaxis, ...]).cuda())
 
     return point_clouds
-
-
-def read_point_cloud(filename, data_type):
-    if data_type == "dataset":
-        point_cloud = np.load(filename)
-    else:
-        point_cloud = np.asarray(o3d.io.read_point_cloud(filename).points)
-
-    return torch.from_numpy(point_cloud[np.newaxis, ...]).cuda()
 
 
 def get_distances(point_clouds):
@@ -95,12 +90,25 @@ def save_result(output, distances):
         json.dump(distances, fp=fp)
 
 
+def read_input_data(filename):
+    with open(filename, "r") as fp:
+        return json.load(fp)
+
+
 def main():
     args = parse_command_prompt()
 
-    point_clouds = read_point_clouds(args.input, args.data_type)
-    distances = get_distances(point_clouds)
-    save_result(args.output, distances)
+    if osp.isdir(args.input):
+        point_clouds = read_point_clouds(args.input, args.data_type)
+        distances = get_distances(point_clouds)
+        save_result(args.output, distances)
+    else:
+        data = read_input_data(args.input)
+
+        for path, data_type, output_filename in data:
+            point_clouds = read_point_clouds(path, data_type)
+            distances = get_distances(point_clouds)
+            save_result(osp.join(args.output, output_filename), distances)
 
     print("Done.")
 
