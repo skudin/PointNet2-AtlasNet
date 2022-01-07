@@ -4,6 +4,7 @@ import os.path as osp
 import numpy as np
 import open3d as o3d
 from matplotlib import pyplot as plt
+import seaborn as sns
 
 import pointnet2_atlasnet.configuration as conf
 
@@ -119,13 +120,27 @@ def fix_normals(pcd, max_iteration=10):
     pcd.normals = o3d.utility.Vector3dVector(normals)
 
 
-def estimate_normals(point_cloud, radius=0.5, max_nn=30):
+def estimate_normals(point_cloud, radius=0.5, max_nn=30, debug_output_dir=None):
     point_cloud.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(
         radius=radius, max_nn=max_nn))
+    if debug_output_dir is not None:
+        o3d.io.write_point_cloud(osp.join(debug_output_dir, "point_cloud_with_normals_by_estimator.ply"),
+                                 point_cloud)
 
     normals_by_camera_location = estimate_normals_by_camera_location(point_cloud)
+    if debug_output_dir is not None:
+        o3d.io.write_point_cloud(osp.join(debug_output_dir, "point_cloud_with_normals_by_camera_location.ply"),
+                                 point_cloud)
+
     normals_by_direction = estimate_normals_by_direction(point_cloud)
+    if debug_output_dir is not None:
+        o3d.io.write_point_cloud(osp.join(debug_output_dir, "point_cloud_with_normals_by_direction.ply"),
+                                 point_cloud)
+
     normals_by_bounding_box = estimate_normals_by_bonding_box(point_cloud)
+    if debug_output_dir is not None:
+        o3d.io.write_point_cloud(osp.join(debug_output_dir, "point_cloud_with_normals_by_bounding_box.ply"),
+                                 point_cloud)
 
     normals = list()
     for i in range(normals_by_camera_location.shape[0]):
@@ -143,6 +158,9 @@ def estimate_normals(point_cloud, radius=0.5, max_nn=30):
 
     point_cloud.normals = o3d.utility.Vector3dVector(normals)
 
+    if debug_output_dir is not None:
+        o3d.io.write_point_cloud(osp.join(debug_output_dir, "point_cloud_with_normals_after_voting.ply"), point_cloud)
+
     fix_normals(point_cloud, max_iteration=10)
 
 
@@ -151,8 +169,11 @@ def create_cylindrical_proj_image(points, output_dir, image_name):
     ax.set_xlabel("phi")
     ax.set_ylabel("y")
 
-    ax.scatter([point[0] for point in points], [point[1] for point in points], s=0.5)
-    fig.savefig(osp.join(output_dir, "%s.png" % image_name))
+    ax.scatter([point[0] for point in points], [point[1] for point in points], s=0.5, label="point cloud projection")
+
+    ax.legend()
+
+    fig.savefig(osp.join(output_dir, "%s.svg" % image_name))
 
 
 def create_margin_with_cylindrical_projection_image(points, margin, output_dir, image_name):
@@ -160,10 +181,13 @@ def create_margin_with_cylindrical_projection_image(points, margin, output_dir, 
     ax.set_xlabel("phi")
     ax.set_ylabel("y")
 
-    ax.scatter([point[0] for point in points], [point[1] for point in points], s=0.5)
-    ax.plot([point[0] for point in margin], [point[1] for point in margin], color="red")
+    ax.scatter([point[0] for point in points], [point[1] for point in points], s=0.5, label="point cloud projection")
+    ax.plot([point[0] for point in margin], [point[1] for point in margin], color="red",
+            label="approximation margin line projection")
 
-    fig.savefig(osp.join(output_dir, "%s.png" % image_name))
+    ax.legend()
+
+    fig.savefig(osp.join(output_dir, "%s.svg" % image_name))
 
 
 def get_cylindrical_projection(points):
@@ -224,22 +248,26 @@ def cut_mesh(mesh, mesh_points_proj, margin):
     return mesh
 
 
-def create_mesh(point_cloud, margin_approx_points_number=25, depth=9, scale=1.1, output_dir=None):
+def create_mesh(point_cloud, margin_approx_points_number=25, depth=9, scale=1.1, debug_output_dir=None):
     # noinspection PyArgumentList
     mesh, _ = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(pcd=point_cloud, depth=depth, scale=scale)
+
+    if debug_output_dir is not None:
+        o3d.io.write_triangle_mesh(osp.join(debug_output_dir, "mesh_after_spsr.ply"), mesh, write_ascii=True,
+                                   write_vertex_colors=False)
 
     point_cloud_proj = get_cylindrical_projection(point_cloud.points)
     mesh_points_proj = get_cylindrical_projection(mesh.vertices)
 
-    if output_dir is not None:
-        create_cylindrical_proj_image(point_cloud_proj, output_dir, "point_cloud_cylindrical_proj")
-        create_cylindrical_proj_image(mesh_points_proj, output_dir, "mesh_vertexes_cylindrical_proj")
+    if debug_output_dir is not None:
+        create_cylindrical_proj_image(point_cloud_proj, debug_output_dir, "point_cloud_cylindrical_proj")
+        create_cylindrical_proj_image(mesh_points_proj, debug_output_dir, "mesh_vertexes_cylindrical_proj")
 
     margin = create_margin_approximation(point_cloud_proj, margin_approx_points_number)
 
-    if output_dir is not None:
-        create_margin_with_cylindrical_projection_image(point_cloud_proj, margin, output_dir, "point_cloud_with_margin")
-        create_margin_with_cylindrical_projection_image(mesh_points_proj, margin, output_dir, "mesh_points_with_margin")
+    if debug_output_dir is not None:
+        create_margin_with_cylindrical_projection_image(point_cloud_proj, margin, debug_output_dir, "point_cloud_with_margin")
+        create_margin_with_cylindrical_projection_image(mesh_points_proj, margin, debug_output_dir, "mesh_points_with_margin")
 
     mesh = cut_mesh(mesh, mesh_points_proj, margin)
 
@@ -250,13 +278,13 @@ def wax_up_meshing(point_cloud, margin_approx_points_number=25, debug_output_dir
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(point_cloud)
 
-    estimate_normals(pcd)
+    estimate_normals(pcd, debug_output_dir=debug_output_dir)
 
     if debug_output_dir is not None:
         o3d.io.write_point_cloud(osp.join(debug_output_dir, "point_cloud_with_normals.ply"), pcd)
 
     mesh = create_mesh(point_cloud=pcd, margin_approx_points_number=margin_approx_points_number,
-                       output_dir=debug_output_dir)
+                       debug_output_dir=debug_output_dir)
 
     if debug_output_dir is not None:
         o3d.io.write_triangle_mesh(osp.join(debug_output_dir, "mesh.ply"), mesh, write_ascii=True,
