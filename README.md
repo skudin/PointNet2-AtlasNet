@@ -1,47 +1,15 @@
-# AtlasNet2
+# Reconstruction of the dental crown from single image
 
-## Результаты экспериментов
+This is the code of report "Reconstruction of the dental crown from a single image", 
+which was told at the Data Fest Online 2020 conference. The work is based on 
+[AltasNet](https://github.com/ThibaultGROUEIX/AtlasNet) and [Pointnet2_PyTorch](https://github.com/erikwijmans/Pointnet2_PyTorch).
 
-| Метод | Chamfer |
-| ----- | ------- |
-| Autoencoder_Baseline (от автора) | 0.001963350556556298 |
-| Autoencoder_Atlasnet_25prim (от автора) | 0.0014476474650672833 |
-| Autoencoder_Atlasnet_1prim (воспроизедение) | 0.0018603184679336 |
-| Autoencoder_Atlasnet_25prim (воспроизедение) | 0.0014856810862457 |
-| Autoencoder_Atlasnet2_1prim | 0.0016481578493174 |
-| Autoencoder_Atlasnet2_25prim | 0.0014720115310883 |
+Video: https://www.youtube.com/watch?v=cDnZSTciLxQ
 
-## Постановка задачи
+Presentation: https://docs.google.com/presentation/d/1devSDQWHgxEzu1-KkR5cqEvCHj0hW-J8NCdIx-sRJj8/edit?usp=sharing
 
-Есть проект AtlasNet (https://github.com/ThibaultGROUEIX/AtlasNet), в нём на датасете ShapeNet делается автокодирование
-моделей, а так же реконструкция 3D модели по одному изображению. В модели автокодировщика в качестве энкодера 
-используется энкодер от PointNet. Проблема этой модели в том, что она терияет мелкие детали при автокодировании.
+The work was sponsored by [Glidewell Dental](https://glidewelldental.com/) and uses its data.
 
-Задача -- заменить энкодер от PointNet на энкодер от PointNet++. С высокой вероятностью это улучшит результаты на 
-ShapeNet и добавит больше детализации результату. Из моей работы достоверно известно, что подобный трюк улучшает 
-результаты автокодирования на датасете wax up'ов (внешняя поверхность модели зубной коронки) коронок для 36 (по FDI) 
-зубов, как по метрике Chamfer, так и визуально в детализации.
-
-
-## Про статью
-
-В статью предполагается добавить помимо результатов на ShapeNet результаты на закрытом датасете wax up'ов зубных коронок
-для 36 зубов со скриншотами, демонстрирующими результат, но без публикации самого датасета. Нужно это для того, чтобы 
-продемонстрировать то, что полученная штука работает не только на ShapeNet, но и на других датасетах.
-
-Руководство от меня требует, чтобы в статье было указано в какой я компании работаю, а при демонстрации результатов на 
-датасете wax up'ов было указано, что он предоставлен компанией Glidewell Labs.
-
-
-## Возможное дополнение задачи
-
-Возможно, стоит попробовать заменить энкодер AtlasNet на энкодер других, отличных от PointNet/PointNet++ сетей. Или это,
-возможно, тема для других статей?
-
-
-## Распределение обязанностей в команде
-
-Предлагаю следующее распределение ролей в команде:
-
-* Кудин Степан -- разработка кода, проведение эксперементов, помощь по написанию статьи.
-* Нотченко Александр -- написание статьи, публикация в нормальном журнале.
+Authors:
+* [Stepan Kudin](https://github.com/skudin)
+* [Alexander Notchenko](https://github.com/gangiman)
